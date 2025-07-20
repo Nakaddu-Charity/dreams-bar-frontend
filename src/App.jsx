@@ -1,14 +1,15 @@
 // src/App.jsx - React Frontend for Inventory, Room, and Bookings Management
 // This component provides a UI to manage inventory, rooms, and room bookings.
-// It connects to the Node.js Express.js backend running on http://localhost:5000.
-// This version uses Bootstrap for styling and react-icons for icons.
+// It connects to the Node.js Express.js backend running on Render.com.
+// This version includes enhanced styling with shades of blue and white.
 
 import React, { useState, useEffect } from 'react';
-// Import icons from react-icons/bs (Bootstrap Icons subset)
-import { BsPlusLg, BsPencilFill, BsTrashFill, BsXCircleFill, BsSaveFill, BsHouseDoorFill, BsDoorOpenFill, BsCalendarCheckFill, BsPersonFill } from 'react-icons/bs';
+import { Plus, Edit, Trash2, XCircle, Save, Home, BedDouble, CalendarCheck, User, Search } from 'lucide-react'; // Added Search icon for future use
 
 // BASE_URL for your backend API
-const API_BASE_URL = 'http://localhost:5000/api';
+// This line now correctly uses the environment variable provided by Vite,
+// which will be set in Netlify's environment variables.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Main App Component
 function App() {
@@ -17,68 +18,62 @@ function App() {
 
   // Render the appropriate component based on the current view
   return (
-    // Overall container with Bootstrap background and padding
-    <div className="bg-light min-vh-100 d-flex flex-column">
+    // Overall background color and font
+    <div className="min-h-screen bg-blue-50 font-sans antialiased flex flex-col">
       {/* Navigation Bar */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg py-3">
-        <div className="container-fluid">
-          <a className="navbar-brand fs-2 fw-bold text-white" href="#">Dreams Bar & Guesthouse</a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <button
-                  onClick={() => setCurrentView('inventory')}
-                  className={`btn btn-lg mx-2 ${currentView === 'inventory' ? 'btn-light text-primary shadow' : 'btn-outline-light'}`}
-                >
-                  <BsHouseDoorFill className="me-2" />
-                  Inventory
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  onClick={() => setCurrentView('rooms')}
-                  className={`btn btn-lg mx-2 ${currentView === 'rooms' ? 'btn-light text-primary shadow' : 'btn-outline-light'}`}
-                >
-                  <BsDoorOpenFill className="me-2" />
-                  Rooms
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  onClick={() => setCurrentView('bookings')}
-                  className={`btn btn-lg mx-2 ${currentView === 'bookings' ? 'btn-light text-primary shadow' : 'btn-outline-light'}`}
-                >
-                  <BsCalendarCheckFill className="me-2" />
-                  Bookings
-                </button>
-              </li>
-              {/* Add more navigation buttons as modules are developed */}
-            </ul>
+      <nav className="bg-gradient-to-r from-blue-700 to-blue-900 p-4 shadow-xl">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <h1 className="text-white text-4xl font-extrabold rounded-md p-2 tracking-wide">
+            Dreams Bar & Guesthouse
+          </h1>
+          <div className="flex flex-wrap justify-center md:justify-end space-x-2 md:space-x-4">
+            <button
+              onClick={() => setCurrentView('inventory')}
+              className={`px-5 py-2 rounded-full transition-all duration-300 ease-in-out flex items-center space-x-2 text-lg
+                ${currentView === 'inventory' ? 'bg-white text-blue-800 shadow-lg transform scale-105 border-2 border-blue-400' : 'text-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md'}`}
+            >
+              <Home size={20} />
+              <span>Inventory</span>
+            </button>
+            <button
+              onClick={() => setCurrentView('rooms')}
+              className={`px-5 py-2 rounded-full transition-all duration-300 ease-in-out flex items-center space-x-2 text-lg
+                ${currentView === 'rooms' ? 'bg-white text-blue-800 shadow-lg transform scale-105 border-2 border-blue-400' : 'text-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md'}`}
+            >
+              <BedDouble size={20} />
+              <span>Rooms</span>
+            </button>
+            <button
+              onClick={() => setCurrentView('bookings')}
+              className={`px-5 py-2 rounded-full transition-all duration-300 ease-in-out flex items-center space-x-2 text-lg
+                ${currentView === 'bookings' ? 'bg-white text-blue-800 shadow-lg transform scale-105 border-2 border-blue-400' : 'text-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md'}`}
+            >
+              <CalendarCheck size={20} />
+              <span>Bookings</span>
+            </button>
+            {/* Add more navigation buttons as modules are developed */}
           </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="container flex-grow-1 py-4 my-4">
+      <main className="flex-grow container mx-auto p-4 md:p-6 my-8">
         {/* Render the selected view component */}
         {currentView === 'inventory' && <InventoryManagement />}
         {currentView === 'rooms' && <RoomsManagement />}
         {currentView === 'bookings' && <BookingsManagement />}
         {/* Placeholder for other modules */}
         {currentView !== 'inventory' && currentView !== 'rooms' && currentView !== 'bookings' && (
-          <div className="card shadow-lg p-5 text-center mt-5 border-top border-primary border-4">
-            <p className="fs-4 fw-bold mb-3 text-secondary">Module for "{currentView}" is under development.</p>
-            <p className="text-muted">Please select another option from the navigation above.</p>
+          <div className="bg-white p-8 rounded-xl shadow-lg text-center text-gray-600 text-xl mt-20 border-t-4 border-blue-500">
+            <p className="font-semibold text-2xl mb-4">Module for "{currentView}" is under development.</p>
+            <p>Please select another option from the navigation above.</p>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-dark text-white-50 p-3 text-center mt-auto">
-        <p className="mb-0 small">&copy; {new Date().getFullYear()} Dreams Bar, Gardens & Guesthouse. All rights reserved.</p>
+      <footer className="bg-blue-900 text-blue-200 p-4 text-center rounded-t-xl shadow-inner mt-auto">
+        <p className="text-sm">&copy; {new Date().getFullYear()} Dreams Bar, Gardens & Guesthouse. All rights reserved.</p>
       </footer>
     </div>
   );
@@ -234,86 +229,82 @@ function InventoryManagement() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="ms-3 text-secondary">Loading Inventory...</p>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <p className="ml-4 text-gray-600">Loading Inventory...</p>
       </div>
     );
   }
 
   return (
-    <div className="card shadow-lg p-4 border-top border-primary border-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h2 className="mb-3 mb-md-0 text-secondary">Inventory Management</h2>
+    <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+        <h2 className="text-3xl font-semibold text-gray-800">Inventory Management</h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="btn btn-primary btn-lg d-flex align-items-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
         >
-          <BsPlusLg className="me-2" />
-          Add New Item
+          <Plus size={20} />
+          <span>Add New Item</span>
         </button>
       </div>
 
       {message && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          {message}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{message}</span>
         </div>
       )}
 
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          {error}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{error}</span>
         </div>
       )}
 
       {inventory.length === 0 ? (
-        <p className="text-center text-muted fs-5 mt-4 p-4 border rounded bg-light">No inventory items found. Add some new items!</p>
+        <p className="text-center text-gray-500 text-lg mt-10 p-4 border border-gray-200 rounded-lg bg-gray-50">No inventory items found. Add some new items!</p>
       ) : (
-        <div className="table-responsive rounded shadow-sm border">
-          <table className="table table-hover table-striped mb-0">
-            <thead className="bg-primary text-white">
+        <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+          <table className="min-w-full bg-white border-collapse">
+            <thead className="bg-blue-100">
               <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Category ID</th>
-                <th scope="col">Quantity</th>
-                <th scope="col">Unit</th>
-                <th scope="col">Cost Price</th>
-                <th scope="col">Selling Price</th>
-                <th scope="col">Reorder Level</th>
-                <th scope="col">Actions</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tl-lg">ID</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Name</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Category ID</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Quantity</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Unit</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Cost Price</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Selling Price</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Reorder Level</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tr-lg">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {inventory.map((item, index) => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.name}</td>
-                  <td>{item.category_id}</td>
-                  <td>{item.quantity}</td>
-                  <td>{item.unit}</td>
-                  <td>UGX {item.cost_price.toFixed(2)}</td>
-                  <td>UGX {item.selling_price.toFixed(2)}</td>
-                  <td>{item.reorder_level}</td>
-                  <td>
-                    <div className="d-flex">
+                <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-blue-100 transition duration-150`}>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.id}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.name}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.category_id}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.quantity}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.unit}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">UGX {item.cost_price.toFixed(2)}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">UGX {item.selling_price.toFixed(2)}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{item.reorder_level}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => openEditModal(item)}
-                        className="btn btn-outline-primary btn-sm me-2"
+                        className="text-blue-600 hover:text-blue-900 transition duration-150 p-2 rounded-full hover:bg-blue-100"
                         title="Edit Item"
                       >
-                        <BsPencilFill size={16} />
+                        <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteItem(item.id)}
-                        className="btn btn-outline-danger btn-sm"
+                        className="text-red-600 hover:text-red-900 transition duration-150 p-2 rounded-full hover:bg-red-100"
                         title="Delete Item"
                       >
-                        <BsTrashFill size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -326,15 +317,30 @@ function InventoryManagement() {
 
       {/* Add Item Modal */}
       {showAddModal && (
-        <BootstrapModal title="Add New Inventory Item" onClose={() => setShowAddModal(false)}>
-          <form onSubmit={handleAddItem} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="name" className="form-label">Name</label>
-              <input type="text" className="form-control" id="name" name="name" value={newItem.name} onChange={handleInputChange} required />
+        <Modal title="Add New Inventory Item" onClose={() => setShowAddModal(false)}>
+          <form onSubmit={handleAddItem} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                value={newItem.name}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="category_id" className="form-label">Category</label>
-              <select className="form-select" id="category_id" name="category_id" value={newItem.category_id} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">Category</label>
+              <select
+                name="category_id"
+                id="category_id"
+                value={newItem.category_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select a Category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -343,54 +349,118 @@ function InventoryManagement() {
                 ))}
               </select>
               {categories.length === 0 && (
-                <div className="form-text text-danger">No categories found. Please add them manually in your database.</div>
+                <p className="text-sm text-red-500 mt-1">No categories found. Please add categories in your database first (e.g., via MariaDB client).</p>
               )}
             </div>
-            <div className="col-md-6">
-              <label htmlFor="quantity" className="form-label">Quantity</label>
-              <input type="number" className="form-control" id="quantity" name="quantity" value={newItem.quantity} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+              <input
+                type="number"
+                name="quantity"
+                id="quantity"
+                value={newItem.quantity}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="unit" className="form-label">Unit (e.g., bottles, kg, pcs)</label>
-              <input type="text" className="form-control" id="unit" name="unit" value={newItem.unit} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unit (e.g., bottles, kg, pcs)</label>
+              <input
+                type="text"
+                name="unit"
+                id="unit"
+                value={newItem.unit}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="cost_price" className="form-label">Cost Price (UGX)</label>
-              <input type="number" className="form-control" id="cost_price" name="cost_price" value={newItem.cost_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700">Cost Price (UGX)</label>
+              <input
+                type="number"
+                name="cost_price"
+                id="cost_price"
+                value={newItem.cost_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="selling_price" className="form-label">Selling Price (UGX)</label>
-              <input type="number" className="form-control" id="selling_price" name="selling_price" value={newItem.selling_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="selling_price" className="block text-sm font-medium text-gray-700">Selling Price (UGX)</label>
+              <input
+                type="number"
+                name="selling_price"
+                id="selling_price"
+                value={newItem.selling_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-12">
-              <label htmlFor="reorder_level" className="form-label">Reorder Level</label>
-              <input type="number" className="form-control" id="reorder_level" name="reorder_level" value={newItem.reorder_level} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700">Reorder Level</label>
+              <input
+                type="number"
+                name="reorder_level"
+                id="reorder_level"
+                value={newItem.reorder_level}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-primary d-flex align-items-center">
-                <BsPlusLg className="me-2" />
-                Add Item
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Plus size={20} />
+                <span>Add Item</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
 
       {/* Edit Item Modal */}
       {showEditModal && currentItem && (
-        <BootstrapModal title="Edit Inventory Item" onClose={() => setShowEditModal(false)}>
-          <form onSubmit={handleUpdateItem} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="edit_name" className="form-label">Name</label>
-              <input type="text" className="form-control" id="edit_name" name="name" value={newItem.name} onChange={handleInputChange} required />
+        <Modal title="Edit Inventory Item" onClose={() => setShowEditModal(false)}>
+          <form onSubmit={handleUpdateItem} className="space-y-4">
+            <div>
+              <label htmlFor="edit_name" className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                type="text"
+                name="name"
+                id="edit_name"
+                value={newItem.name}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_category_id" className="form-label">Category</label>
-              <select className="form-select" id="edit_category_id" name="category_id" value={newItem.category_id} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="edit_category_id" className="block text-sm font-medium text-gray-700">Category</label>
+              <select
+                name="category_id"
+                id="edit_category_id"
+                value={newItem.category_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select a Category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -399,38 +469,87 @@ function InventoryManagement() {
                 ))}
               </select>
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_quantity" className="form-label">Quantity</label>
-              <input type="number" className="form-control" id="edit_quantity" name="quantity" value={newItem.quantity} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="edit_quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+              <input
+                type="number"
+                name="quantity"
+                id="edit_quantity"
+                value={newItem.quantity}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_unit" className="form-label">Unit</label>
-              <input type="text" className="form-control" id="edit_unit" name="unit" value={newItem.unit} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="edit_unit" className="block text-sm font-medium text-gray-700">Unit</label>
+              <input
+                type="text"
+                name="unit"
+                id="edit_unit"
+                value={newItem.unit}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_cost_price" className="form-label">Cost Price (UGX)</label>
-              <input type="number" className="form-control" id="edit_cost_price" name="cost_price" value={newItem.cost_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="edit_cost_price" className="block text-sm font-medium text-gray-700">Cost Price (UGX)</label>
+              <input
+                type="number"
+                name="cost_price"
+                id="edit_cost_price"
+                value={newItem.cost_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_selling_price" className="form-label">Selling Price (UGX)</label>
-              <input type="number" className="form-control" id="edit_selling_price" name="selling_price" value={newItem.selling_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="edit_selling_price" className="block text-sm font-medium text-gray-700">Selling Price (UGX)</label>
+              <input
+                type="number"
+                name="selling_price"
+                id="edit_selling_price"
+                value={newItem.selling_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-12">
-              <label htmlFor="edit_reorder_level" className="form-label">Reorder Level</label>
-              <input type="number" className="form-control" id="edit_reorder_level" name="reorder_level" value={newItem.reorder_level} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="edit_reorder_level" className="block text-sm font-medium text-gray-700">Reorder Level</label>
+              <input
+                type="number"
+                name="reorder_level"
+                id="reorder_level"
+                value={newItem.reorder_level}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-success d-flex align-items-center">
-                <BsSaveFill className="me-2" />
-                Save Changes
+              <button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Save size={20} />
+                <span>Save Changes</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
     </div>
   );
@@ -563,80 +682,76 @@ function RoomsManagement() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="ms-3 text-secondary">Loading Rooms...</p>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <p className="ml-4 text-gray-600">Loading Rooms...</p>
       </div>
     );
   }
 
   return (
-    <div className="card shadow-lg p-4 border-top border-primary border-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h2 className="mb-3 mb-md-0 text-secondary">Rooms Management</h2>
+    <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+        <h2 className="text-3xl font-semibold text-gray-800">Rooms Management</h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="btn btn-primary btn-lg d-flex align-items-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
         >
-          <BsPlusLg className="me-2" />
-          Add New Room
+          <Plus size={20} />
+          <span>Add New Room</span>
         </button>
       </div>
 
       {message && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          {message}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{message}</span>
         </div>
       )}
 
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          {error}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{error}</span>
         </div>
       )}
 
       {rooms.length === 0 ? (
-        <p className="text-center text-muted fs-5 mt-4 p-4 border rounded bg-light">No rooms found. Add some new rooms!</p>
+        <p className="text-center text-gray-500 text-lg mt-10 p-4 border border-gray-200 rounded-lg bg-gray-50">No rooms found. Add some new rooms!</p>
       ) : (
-        <div className="table-responsive rounded shadow-sm border">
-          <table className="table table-hover table-striped mb-0">
-            <thead className="bg-primary text-white">
+        <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+          <table className="min-w-full bg-white border-collapse">
+            <thead className="bg-blue-100">
               <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Room Number</th>
-                <th scope="col">Type</th>
-                <th scope="col">Price/Night (UGX)</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tl-lg">ID</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Room Number</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Type</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Price/Night (UGX)</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tr-lg">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {rooms.map((room, index) => (
-                <tr key={room.id}>
-                  <td>{room.id}</td>
-                  <td>{room.room_number}</td>
-                  <td>{room.type}</td>
-                  <td>UGX {room.price_per_night.toFixed(2)}</td>
-                  <td>{room.status}</td>
-                  <td>
-                    <div className="d-flex">
+                <tr key={room.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-blue-100 transition duration-150`}>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{room.id}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{room.room_number}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{room.type}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">UGX {room.price_per_night.toFixed(2)}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{room.status}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => openEditModal(room)}
-                        className="btn btn-outline-primary btn-sm me-2"
+                        className="text-blue-600 hover:text-blue-900 transition duration-150 p-2 rounded-full hover:bg-blue-100"
                         title="Edit Room"
                       >
-                        <BsPencilFill size={16} />
+                        <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteRoom(room.id)}
-                        className="btn btn-outline-danger btn-sm"
+                        className="text-red-600 hover:text-red-900 transition duration-150 p-2 rounded-full hover:bg-red-100"
                         title="Delete Room"
                       >
-                        <BsTrashFill size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -649,106 +764,187 @@ function RoomsManagement() {
 
       {/* Add Room Modal */}
       {showAddModal && (
-        <BootstrapModal title="Add New Room" onClose={() => setShowAddModal(false)}>
-          <form onSubmit={handleAddRoom} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="room_number" className="form-label">Room Number</label>
-              <input type="text" className="form-control" id="room_number" name="room_number" value={newRoom.room_number} onChange={handleInputChange} required />
+        <Modal title="Add New Room" onClose={() => setShowAddModal(false)}>
+          <form onSubmit={handleAddRoom} className="space-y-4">
+            <div>
+              <label htmlFor="room_number" className="block text-sm font-medium text-gray-700">Room Number</label>
+              <input
+                type="text"
+                name="room_number"
+                id="room_number"
+                value={newRoom.room_number}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="type" className="form-label">Type</label>
-              <select className="form-select" id="type" name="type" value={newRoom.type} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+              <select
+                name="type"
+                id="type"
+                value={newRoom.type}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Type</option>
                 <option value="Standard">Standard</option>
                 <option value="Deluxe">Deluxe</option>
                 <option value="Suite">Suite</option>
               </select>
             </div>
-            <div className="col-md-6">
-              <label htmlFor="price_per_night" className="form-label">Price Per Night (UGX)</label>
-              <input type="number" className="form-control" id="price_per_night" name="price_per_night" value={newRoom.price_per_night} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="price_per_night" className="block text-sm font-medium text-gray-700">Price Per Night (UGX)</label>
+              <input
+                type="number"
+                name="price_per_night"
+                id="price_per_night"
+                value={newRoom.price_per_night}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="status" className="form-label">Status</label>
-              <select className="form-select" id="status" name="status" value={newRoom.status} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                name="status"
+                id="status"
+                value={newRoom.status}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="Available">Available</option>
                 <option value="Occupied">Occupied</option>
                 <option value="Maintenance">Maintenance</option>
               </select>
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-primary d-flex align-items-center">
-                <BsPlusLg className="me-2" />
-                Add Room
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Plus size={20} />
+                <span>Add Room</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
 
       {/* Edit Room Modal */}
       {showEditModal && currentRoom && (
-        <BootstrapModal title="Edit Room" onClose={() => setShowEditModal(false)}>
-          <form onSubmit={handleUpdateRoom} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="edit_room_number" className="form-label">Room Number</label>
-              <input type="text" className="form-control" id="edit_room_number" name="room_number" value={newRoom.room_number} onChange={handleInputChange} required />
+        <Modal title="Edit Room" onClose={() => setShowEditModal(false)}>
+          <form onSubmit={handleUpdateRoom} className="space-y-4">
+            <div>
+              <label htmlFor="edit_room_number" className="block text-sm font-medium text-gray-700">Room Number</label>
+              <input
+                type="text"
+                name="room_number"
+                id="edit_room_number"
+                value={newRoom.room_number}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_type" className="form-label">Type</label>
-              <select className="form-select" id="edit_type" name="type" value={newRoom.type} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="edit_type" className="block text-sm font-medium text-gray-700">Type</label>
+              <select
+                name="type"
+                id="edit_type"
+                value={newRoom.type}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Type</option>
                 <option value="Standard">Standard</option>
                 <option value="Deluxe">Deluxe</option>
                 <option value="Suite">Suite</option>
               </select>
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_price_per_night" className="form-label">Price Per Night (UGX)</label>
-              <input type="number" className="form-control" id="edit_price_per_night" name="price_per_night" value={newRoom.price_per_night} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="edit_price_per_night" className="block text-sm font-medium text-gray-700">Price Per Night (UGX)</label>
+              <input
+                type="number"
+                name="price_per_night"
+                id="edit_price_per_night"
+                value={newRoom.price_per_night}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_status" className="form-label">Status</label>
-              <select className="form-select" id="edit_status" name="status" value={newRoom.status} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="edit_status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                name="status"
+                id="edit_status"
+                value={newRoom.status}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="Available">Available</option>
                 <option value="Occupied">Occupied</option>
                 <option value="Maintenance">Maintenance</option>
               </select>
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-success d-flex align-items-center">
-                <BsSaveFill className="me-2" />
-                Save Changes
+              <button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Save size={20} />
+                <span>Save Changes</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
     </div>
   );
 }
 
-// Reusable Bootstrap Modal Component
-const BootstrapModal = ({ title, children, onClose }) => {
+
+// Reusable Modal Component (Unchanged)
+const Modal = ({ title, children, onClose }) => {
   return (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
-      <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{title}</h5>
-            <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
-          </div>
-          <div className="modal-body">
-            {children}
-          </div>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg transform transition-all duration-300 scale-100 opacity-100 border-t-4 border-blue-500">
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition duration-150 p-2 rounded-full hover:bg-gray-100"
+            title="Close"
+          >
+            <XCircle size={24} />
+          </button>
+        </div>
+        <div>
+          {children}
         </div>
       </div>
     </div>
@@ -827,7 +1023,6 @@ function BookingsManagement() {
       setClients(data);
     } catch (err) {
       console.error("Failed to fetch clients for dropdown:", err);
-      setMessage("Warning: Could not load clients. Add them directly in your database for now.");
     }
   };
 
@@ -925,84 +1120,80 @@ function BookingsManagement() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="ms-3 text-secondary">Loading Bookings...</p>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <p className="ml-4 text-gray-600">Loading Bookings...</p>
       </div>
     );
   }
 
   return (
-    <div className="card shadow-lg p-4 border-top border-primary border-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h2 className="mb-3 mb-md-0 text-secondary">Bookings Management</h2>
+    <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+        <h2 className="text-3xl font-semibold text-gray-800">Bookings Management</h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="btn btn-primary btn-lg d-flex align-items-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
         >
-          <BsPlusLg className="me-2" />
-          Add New Booking
+          <Plus size={20} />
+          <span>Add New Booking</span>
         </button>
       </div>
 
       {message && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          {message}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{message}</span>
         </div>
       )}
 
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          {error}
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 shadow-sm" role="alert">
+          <span className="block sm:inline">{error}</span>
         </div>
       )}
 
       {bookings.length === 0 ? (
-        <p className="text-center text-muted fs-5 mt-4 p-4 border rounded bg-light">No bookings found. Add some new bookings!</p>
+        <p className="text-center text-gray-500 text-lg mt-10 p-4 border border-gray-200 rounded-lg bg-gray-50">No bookings found. Add some new bookings!</p>
       ) : (
-        <div className="table-responsive rounded shadow-sm border">
-          <table className="table table-hover table-striped mb-0">
-            <thead className="bg-primary text-white">
+        <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
+          <table className="min-w-full bg-white border-collapse">
+            <thead className="bg-blue-100">
               <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Room</th>
-                <th scope="col">Client</th>
-                <th scope="col">Check-in</th>
-                <th scope="col">Check-out</th>
-                <th scope="col">Total Price (UGX)</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tl-lg">ID</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Room</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Client</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Check-in</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Check-out</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Total Price (UGX)</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-left text-sm font-semibold text-blue-800 uppercase tracking-wider rounded-tr-lg">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {bookings.map((booking, index) => (
-                <tr key={booking.id}>
-                  <td>{booking.id}</td>
-                  <td>{booking.room_number} ({booking.room_type})</td>
-                  <td>{booking.client_name} ({booking.client_contact_info})</td>
-                  <td>{new Date(booking.check_in_date).toLocaleDateString()}</td>
-                  <td>{new Date(booking.check_out_date).toLocaleDateString()}</td>
-                  <td>UGX {booking.total_price.toFixed(2)}</td>
-                  <td>{booking.status}</td>
-                  <td>
-                    <div className="d-flex">
+                <tr key={booking.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-blue-100 transition duration-150`}>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{booking.id}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{booking.room_number} ({booking.room_type})</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{booking.client_name} ({booking.client_contact_info})</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{new Date(booking.check_in_date).toLocaleDateString()}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{new Date(booking.check_out_date).toLocaleDateString()}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">UGX {booking.total_price.toFixed(2)}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{booking.status}</td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => openEditModal(booking)}
-                        className="btn btn-outline-primary btn-sm me-2"
+                        className="text-blue-600 hover:text-blue-900 transition duration-150 p-2 rounded-full hover:bg-blue-100"
                         title="Edit Booking"
                       >
-                        <BsPencilFill size={16} />
+                        <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteBooking(booking.id)}
-                        className="btn btn-outline-danger btn-sm"
+                        className="text-red-600 hover:text-red-900 transition duration-150 p-2 rounded-full hover:bg-red-100"
                         title="Delete Booking"
                       >
-                        <BsTrashFill size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -1015,11 +1206,18 @@ function BookingsManagement() {
 
       {/* Add Booking Modal */}
       {showAddModal && (
-        <BootstrapModal title="Add New Booking" onClose={() => setShowAddModal(false)}>
-          <form onSubmit={handleAddBooking} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="booking_room_id" className="form-label">Room</label>
-              <select className="form-select" id="booking_room_id" name="room_id" value={newBooking.room_id} onChange={handleInputChange} required>
+        <Modal title="Add New Booking" onClose={() => setShowAddModal(false)}>
+          <form onSubmit={handleAddBooking} className="space-y-4">
+            <div>
+              <label htmlFor="booking_room_id" className="block text-sm font-medium text-gray-700">Room</label>
+              <select
+                name="room_id"
+                id="booking_room_id"
+                value={newBooking.room_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Room</option>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -1028,12 +1226,19 @@ function BookingsManagement() {
                 ))}
               </select>
               {rooms.length === 0 && (
-                <div className="form-text text-danger">No rooms found. Please add rooms first via Rooms Management.</div>
+                <p className="text-sm text-red-500 mt-1">No rooms found. Please add rooms first via Rooms Management.</p>
               )}
             </div>
-            <div className="col-md-6">
-              <label htmlFor="booking_client_id" className="form-label">Client</label>
-              <select className="form-select" id="booking_client_id" name="client_id" value={newBooking.client_id} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="booking_client_id" className="block text-sm font-medium text-gray-700">Client</label>
+              <select
+                name="client_id"
+                id="booking_client_id"
+                value={newBooking.client_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Client</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
@@ -1042,51 +1247,97 @@ function BookingsManagement() {
                 ))}
               </select>
               {clients.length === 0 && (
-                <div className="form-text text-danger">No clients found. Please add clients directly in your database for now.</div>
+                <p className="text-sm text-red-500 mt-1">No clients found. Please add clients directly in your database for now.</p>
               )}
             </div>
-            <div className="col-md-6">
-              <label htmlFor="check_in_date" className="form-label">Check-in Date</label>
-              <input type="date" className="form-control" id="check_in_date" name="check_in_date" value={newBooking.check_in_date} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="check_in_date" className="block text-sm font-medium text-gray-700">Check-in Date</label>
+              <input
+                type="date"
+                name="check_in_date"
+                id="check_in_date"
+                value={newBooking.check_in_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="check_out_date" className="form-label">Check-out Date</label>
-              <input type="date" className="form-control" id="check_out_date" name="check_out_date" value={newBooking.check_out_date} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="check_out_date" className="block text-sm font-medium text-gray-700">Check-out Date</label>
+              <input
+                type="date"
+                name="check_out_date"
+                id="check_out_date"
+                value={newBooking.check_out_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="booking_total_price" className="form-label">Total Price (UGX)</label>
-              <input type="number" className="form-control" id="booking_total_price" name="total_price" value={newBooking.total_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="booking_total_price" className="block text-sm font-medium text-gray-700">Total Price (UGX)</label>
+              <input
+                type="number"
+                name="total_price"
+                id="booking_total_price"
+                value={newBooking.total_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="booking_status" className="form-label">Status</label>
-              <select className="form-select" id="booking_status" name="status" value={newBooking.status} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="booking_status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                name="status"
+                id="booking_status"
+                value={newBooking.status}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="Confirmed">Confirmed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
                 <option value="Completed">Completed</option>
               </select>
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-primary d-flex align-items-center">
-                <BsPlusLg className="me-2" />
-                Add Booking
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Plus size={20} />
+                <span>Add Booking</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
 
       {/* Edit Booking Modal */}
       {showEditModal && currentBooking && (
-        <BootstrapModal title="Edit Booking" onClose={() => setShowEditModal(false)}>
-          <form onSubmit={handleUpdateBooking} className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="edit_booking_room_id" className="form-label">Room</label>
-              <select className="form-select" id="edit_booking_room_id" name="room_id" value={newBooking.room_id} onChange={handleInputChange} required>
+        <Modal title="Edit Booking" onClose={() => setShowEditModal(false)}>
+          <form onSubmit={handleUpdateBooking} className="space-y-4">
+            <div>
+              <label htmlFor="edit_booking_room_id" className="block text-sm font-medium text-gray-700">Room</label>
+              <select
+                name="room_id"
+                id="edit_booking_room_id"
+                value={newBooking.room_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Room</option>
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -1095,9 +1346,16 @@ function BookingsManagement() {
                 ))}
               </select>
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_booking_client_id" className="form-label">Client</label>
-              <select className="form-select" id="edit_booking_client_id" name="client_id" value={newBooking.client_id} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="edit_booking_client_id" className="block text-sm font-medium text-gray-700">Client</label>
+              <select
+                name="client_id"
+                id="edit_booking_client_id"
+                value={newBooking.client_id}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="">Select Client</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
@@ -1106,39 +1364,78 @@ function BookingsManagement() {
                 ))}
               </select>
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_check_in_date" className="form-label">Check-in Date</label>
-              <input type="date" className="form-control" id="edit_check_in_date" name="check_in_date" value={newBooking.check_in_date} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="edit_check_in_date" className="block text-sm font-medium text-gray-700">Check-in Date</label>
+              <input
+                type="date"
+                name="check_in_date"
+                id="edit_check_in_date"
+                value={newBooking.check_in_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_check_out_date" className="form-label">Check-out Date</label>
-              <input type="date" className="form-control" id="edit_check_out_date" name="check_out_date" value={newBooking.check_out_date} onChange={handleInputChange} required />
+            <div>
+              <label htmlFor="edit_check_out_date" className="block text-sm font-medium text-gray-700">Check-out Date</label>
+              <input
+                type="date"
+                name="check_out_date"
+                id="edit_check_out_date"
+                value={newBooking.check_out_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_booking_total_price" className="form-label">Total Price (UGX)</label>
-              <input type="number" className="form-control" id="edit_booking_total_price" name="total_price" value={newBooking.total_price} onChange={handleInputChange} step="0.01" required />
+            <div>
+              <label htmlFor="edit_booking_total_price" className="block text-sm font-medium text-gray-700">Total Price (UGX)</label>
+              <input
+                type="number"
+                name="total_price"
+                id="edit_booking_total_price"
+                value={newBooking.total_price}
+                onChange={handleInputChange}
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="edit_booking_status" className="form-label">Status</label>
-              <select className="form-select" id="edit_booking_status" name="status" value={newBooking.status} onChange={handleInputChange} required>
+            <div>
+              <label htmlFor="edit_booking_status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                name="status"
+                id="edit_booking_status"
+                value={newBooking.status}
+                onChange={handleInputChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
                 <option value="Confirmed">Confirmed</option>
                 <option value="Pending">Pending</option>
                 <option value="Cancelled">Cancelled</option>
                 <option value="Completed">Completed</option>
               </select>
             </div>
-            <div className="col-12 d-flex justify-content-end mt-4">
-              <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary me-2 d-flex align-items-center">
-                <BsXCircleFill className="me-2" />
-                Cancel
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <XCircle size={20} />
+                <span>Cancel</span>
               </button>
-              <button type="submit" className="btn btn-success d-flex align-items-center">
-                <BsSaveFill className="me-2" />
-                Save Changes
+              <button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center space-x-2 hover:scale-105"
+              >
+                <Save size={20} />
+                <span>Save Changes</span>
               </button>
             </div>
           </form>
-        </BootstrapModal>
+        </Modal>
       )}
     </div>
   );
