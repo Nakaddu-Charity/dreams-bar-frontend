@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tailwindcss -i ./src/index.css -o ./dist/assets/index.css --minify && vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "postinstall": "tailwindcss build src/index.css -o src/index.css"
+    "preview": "vite preview"
   },
   "dependencies": {
     "lucide-react": "^0.395.0",
