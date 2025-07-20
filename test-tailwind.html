@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind CDN Test</title>
+    <!-- Tailwind CSS CDN - This loads Tailwind directly from the internet -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Ensure body has some default styling if Tailwind isn't applying */
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-xl text-center">
+        <h1 class="text-3xl font-bold text-blue-600 mb-4">Hello Tailwind!</h1>
+        <p class="text-gray-700 text-lg">
+            If you see this text styled with a blue heading, gray background, and a white box with shadow,
+            then Tailwind CSS is working!
+        </p>
+        <button class="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+            Styled Button
+        </button>
+    </div>
+</body>
+</html>
