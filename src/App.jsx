@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'; // Added useRef
 import './App.css'; // Assuming you have App.css for basic styling
 
 // --- Reusable Modal Component ---
@@ -50,12 +50,12 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [clients, setClients] = useState([]);
 
-  // New states for Rooms search and filter
+  // States for Rooms search and filter
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
   const [roomFilterStatus, setRoomFilterStatus] = useState(''); // 'Available', 'Occupied', 'Maintenance', '' (all)
 
   // Loading state for initial data fetch
-  const [isLoading, setIsLoading] = useState(true); // New loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   // State for Add/Edit forms visibility
   const [showRoomForm, setShowRoomForm] = useState(false);
@@ -85,9 +85,6 @@ function App() {
 
 
   // --- Fetch Data Functions (READ) ---
-  // These functions are called to refresh the data displayed in the tables.
-
-  // Modified fetchRooms to accept search and filter parameters
   const fetchRooms = useCallback(async (search = roomSearchTerm, status = roomFilterStatus) => {
     try {
       let url = '/api/rooms';
@@ -110,7 +107,7 @@ function App() {
       console.error('Failed to fetch rooms:', error);
       showToast('Failed to load rooms. Please try again.', 'error');
     }
-  }, [roomSearchTerm, roomFilterStatus, showToast]); // Dependencies for useCallback
+  }, [roomSearchTerm, roomFilterStatus, showToast]);
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -122,7 +119,7 @@ function App() {
       console.error('Failed to fetch inventory:', error);
       showToast('Failed to load inventory items. Please try again.', 'error');
     }
-  }, [showToast]); // Dependency for useCallback
+  }, [showToast]);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -134,7 +131,7 @@ function App() {
       console.error('Failed to fetch bookings:', error);
       showToast('Failed to load bookings. Please try again.', 'error');
     }
-  }, [showToast]); // Dependency for useCallback
+  }, [showToast]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -149,7 +146,7 @@ function App() {
       console.error('Error fetching categories:', error);
       showToast('Failed to load categories. Please try again.', 'error');
     }
-  }, [showToast]); // Dependency for useCallback
+  }, [showToast]);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -164,7 +161,7 @@ function App() {
       console.error('Error fetching clients:', error);
       showToast('Failed to load clients. Please try again.', 'error');
     }
-  }, [showToast]); // Dependency for useCallback
+  }, [showToast]);
 
   // Initial data load on component mount - SEQUENTIAL
   useEffect(() => {
@@ -183,12 +180,30 @@ function App() {
   }, [fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]);
 
 
-  // Effect to re-fetch rooms when search term or filter status changes
+  // Debounce logic for room search term
+  const debounceTimeoutRef = useRef(null); // Use useRef to hold the timeout ID
+
+  const handleRoomSearchChange = (e) => {
+    const value = e.target.value;
+    setRoomSearchTerm(value); // Update the state immediately for input display
+
+    // Clear previous timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Set a new timeout to call fetchRooms after a delay
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchRooms(value, roomFilterStatus); // Pass the current value and status
+    }, 500); // 500ms debounce delay
+  };
+
+  // Effect to re-fetch rooms when filter status changes (no debounce needed for dropdown)
   useEffect(() => {
     if (!isLoading) { // Only refetch if initial load is complete
-      fetchRooms();
+      fetchRooms(roomSearchTerm, roomFilterStatus);
     }
-  }, [roomSearchTerm, roomFilterStatus, fetchRooms, isLoading]);
+  }, [roomFilterStatus, fetchRooms, isLoading, roomSearchTerm]); // Added roomSearchTerm to dependencies
 
 
   // --- Form Change Handlers ---
@@ -236,7 +251,7 @@ function App() {
       showToast('Room added successfully!', 'success');
       setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' });
       setShowRoomForm(false);
-      fetchRooms();
+      fetchRooms(); // Re-fetch all rooms after adding
     } catch (error) {
       console.error('Failed to add room:', error);
       showToast('Failed to add room. Please try again.', 'error');
@@ -296,7 +311,7 @@ function App() {
       showToast('Room updated successfully!', 'success');
       setEditingRoom(null);
       setShowRoomForm(false);
-      fetchRooms();
+      fetchRooms(); // Re-fetch all rooms after updating
     } catch (error) {
       console.error('Failed to update room:', error);
       showToast('Failed to update room. Please try again.', 'error');
@@ -360,7 +375,7 @@ function App() {
         }
       } else {
         showToast('Room deleted successfully!', 'success');
-        fetchRooms();
+        fetchRooms(); // Re-fetch all rooms after deleting
       }
     } catch (error) {
       console.error('Failed to delete room:', error);
@@ -636,7 +651,7 @@ function App() {
                 type="text"
                 placeholder="Search by Room Number..."
                 value={roomSearchTerm}
-                onChange={(e) => setRoomSearchTerm(e.target.value)}
+                onChange={handleRoomSearchChange} {/* Changed to use debounced handler */}
                 className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
               <select
