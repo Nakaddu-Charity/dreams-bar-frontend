@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'; // Added useRef
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css'; // Assuming you have App.css for basic styling
 
 // --- Reusable Modal Component ---
@@ -83,6 +83,12 @@ function App() {
     setToast(null);
   }, []);
 
+
+  // Helper function to parse numeric inputs safely
+  const parseNumericInput = (value) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? null : num; // Return null for empty/invalid numbers
+  };
 
   // --- Fetch Data Functions (READ) ---
   const fetchRooms = useCallback(async (search = roomSearchTerm, status = roomFilterStatus) => {
@@ -203,38 +209,38 @@ function App() {
     if (!isLoading) { // Only refetch if initial load is complete
       fetchRooms(roomSearchTerm, roomFilterStatus);
     }
-  }, [roomFilterStatus, fetchRooms, isLoading, roomSearchTerm]); // Added roomSearchTerm to dependencies
+  }, [roomFilterStatus, fetchRooms, isLoading, roomSearchTerm]);
 
 
   // --- Form Change Handlers ---
   const handleNewRoomChange = (e) => {
     const { name, value, type } = e.target;
-    setNewRoom(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setNewRoom(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
   const handleEditRoomChange = (e) => {
     const { name, value, type } = e.target;
-    setEditingRoom(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setEditingRoom(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
   const handleNewInventoryChange = (e) => {
     const { name, value, type } = e.target;
-    setNewInventory(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setNewInventory(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
   const handleEditInventoryChange = (e) => {
     const { name, value, type } = e.target;
-    setEditingInventory(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setEditingInventory(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
   const handleNewBookingChange = (e) => {
     const { name, value, type } = e.target;
-    setNewBooking(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setNewBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
   const handleEditBookingChange = (e) => {
     const { name, value, type } = e.target;
-    setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
 
@@ -342,7 +348,8 @@ function App() {
     e.preventDefault();
     if (!editingBooking) return;
     try {
-      const response = await fetch(`/api/bookings/rooms`, { // Changed to use query param for ID
+      // CORRECTED: Ensure ID is included in the URL for PUT request
+      const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingBooking),
@@ -554,7 +561,7 @@ function App() {
                       type="number"
                       id="total_price"
                       name="total_price"
-                      value={editingBooking ? editingBooking.total_price : newBooking.total_price}
+                      value={editingBooking ? (editingBooking.total_price === null ? '' : editingBooking.total_price) : (newBooking.total_price === null ? '' : newBooking.total_price)}
                       onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
@@ -708,7 +715,7 @@ function App() {
                       type="number"
                       id="price_per_night"
                       name="price_per_night"
-                      value={editingRoom ? editingRoom.price_per_night : newRoom.price_per_night}
+                      value={editingRoom ? (editingRoom.price_per_night === null ? '' : editingRoom.price_per_night) : (newRoom.price_per_night === null ? '' : newRoom.price_per_night)}
                       onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
@@ -836,7 +843,7 @@ function App() {
                       type="number"
                       id="quantity"
                       name="quantity"
-                      value={editingInventory ? editingInventory.quantity : newInventory.quantity}
+                      value={editingInventory ? (editingInventory.quantity === null ? '' : editingInventory.quantity) : (newInventory.quantity === null ? '' : newInventory.quantity)}
                       onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
@@ -859,7 +866,7 @@ function App() {
                       type="number"
                       id="cost_price"
                       name="cost_price"
-                      value={editingInventory ? editingInventory.cost_price : newInventory.cost_price}
+                      value={editingInventory ? (editingInventory.cost_price === null ? '' : editingInventory.cost_price) : (newInventory.cost_price === null ? '' : newInventory.cost_price)}
                       onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
@@ -871,7 +878,7 @@ function App() {
                       type="number"
                       id="selling_price"
                       name="selling_price"
-                      value={editingInventory ? editingInventory.selling_price : newInventory.selling_price}
+                      value={editingInventory ? (editingInventory.selling_price === null ? '' : editingInventory.selling_price) : (newInventory.selling_price === null ? '' : newInventory.selling_price)}
                       onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
@@ -883,7 +890,7 @@ function App() {
                       type="number"
                       id="reorder_level"
                       name="reorder_level"
-                      value={editingInventory ? editingInventory.reorder_level : newInventory.reorder_level}
+                      value={editingInventory ? (editingInventory.reorder_level === null ? '' : editingInventory.reorder_level) : (newInventory.reorder_level === null ? '' : newInventory.reorder_level)}
                       onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
