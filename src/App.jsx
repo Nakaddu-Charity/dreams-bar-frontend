@@ -342,7 +342,7 @@ function App() {
     e.preventDefault();
     if (!editingBooking) return;
     try {
-      const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
+      const response = await fetch(`/api/bookings/rooms`, { // Changed to use query param for ID
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingBooking),
@@ -651,7 +651,7 @@ function App() {
                 type="text"
                 placeholder="Search by Room Number..."
                 value={roomSearchTerm}
-                onChange={handleRoomSearchChange} {/* Changed to use debounced handler */}
+                onChange={handleRoomSearchChange}
                 className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
               <select
