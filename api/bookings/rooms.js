@@ -1,4 +1,4 @@
-// api/bookings/rooms.js - Vercel Serverless Function for Bookings API (with room details) (ES Module)
+// api/bookings/rooms.js - Vercel Serverless Function for Bookings API (ES Module)
 
 import { Pool } from 'pg';
 
@@ -31,30 +31,56 @@ export default async (req, res) => {
     try {
         switch (req.method) {
             case 'GET':
-                // Join bookings with rooms and clients to get names/numbers
-                const getResult = await pool.query(`
+                const { search, status } = req.query; // Extract search and status from query parameters
+                let query = `
                     SELECT
-                        b.*,
+                        b.id,
+                        b.room_id,
+                        b.client_id,
+                        b.check_in_date,
+                        b.check_out_date,
+                        b.total_price,
+                        b.status,
                         r.room_number,
                         r.type AS room_type,
-                        c.name AS client_name,
-                        c.contact_info AS client_contact_info
+                        c.name AS client_name
                     FROM
                         bookings b
                     JOIN
                         rooms r ON b.room_id = r.id
                     JOIN
                         clients c ON b.client_id = c.id
-                    ORDER BY b.id ASC
-                `);
+                `;
+                const queryParams = [];
+                const conditions = [];
+                let paramIndex = 1;
+
+                if (search) {
+                    // Search by room_number OR client_name (case-insensitive)
+                    conditions.push(`(r.room_number ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex})`);
+                    queryParams.push(`%${search}%`);
+                    paramIndex++; // Increment for the next parameter if there is one
+                }
+                if (status) {
+                    conditions.push(`b.status = $${paramIndex++}`);
+                    queryParams.push(status);
+                }
+
+                if (conditions.length > 0) {
+                    query += ' WHERE ' + conditions.join(' AND ');
+                }
+
+                query += ' ORDER BY b.id ASC'; // Always order by ID
+
+                const getResult = await pool.query(query, queryParams);
                 res.status(200).json(getResult.rows);
                 break;
 
             case 'POST':
-                const { room_id, client_id, check_in_date, check_out_date, total_price, status } = req.body;
+                const { room_id, client_id, check_in_date, check_out_date, total_price, status: postStatus } = req.body;
                 const postResult = await pool.query(
                     'INSERT INTO bookings (room_id, client_id, check_in_date, check_out_date, total_price, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-                    [room_id, client_id, check_in_date, check_out_date, total_price, status]
+                    [room_id, client_id, check_in_date, check_out_date, total_price, postStatus]
                 );
                 res.status(201).json(postResult.rows[0]);
                 break;
@@ -79,7 +105,7 @@ export default async (req, res) => {
                 if (deleteResult.rows.length > 0) {
                     res.status(204).end();
                 } else {
-                    res.status(404).json({ message: 'Item not found' });
+                    res.status(404).json({ message: 'Booking not found' });
                 }
                 break;
 

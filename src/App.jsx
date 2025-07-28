@@ -54,9 +54,14 @@ function App() {
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
   const [roomFilterStatus, setRoomFilterStatus] = useState(''); // 'Available', 'Occupied', 'Maintenance', '' (all)
 
-  // NEW: States for Inventory search and filter
+  // States for Inventory search and filter
   const [inventorySearchTerm, setInventorySearchTerm] = useState('');
   const [inventoryFilterCategory, setInventoryFilterCategory] = useState(''); // Category ID or '' (all)
+
+  // NEW: States for Bookings search and filter
+  const [bookingSearchTerm, setBookingSearchTerm] = useState('');
+  const [bookingFilterStatus, setBookingFilterStatus] = useState(''); // 'Confirmed', 'Pending', 'Cancelled', 'Completed', '' (all)
+
 
   // Loading state for initial data fetch
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +124,6 @@ function App() {
     }
   }, [roomSearchTerm, roomFilterStatus, showToast]);
 
-  // Modified fetchInventory to accept search and filter parameters
   const fetchInventory = useCallback(async (search = inventorySearchTerm, category = inventoryFilterCategory) => {
     try {
       let url = '/api/inventory';
@@ -142,11 +146,24 @@ function App() {
       console.error('Failed to fetch inventory:', error);
       showToast('Failed to load inventory items. Please try again.', 'error');
     }
-  }, [inventorySearchTerm, inventoryFilterCategory, showToast]); // Dependencies for useCallback
+  }, [inventorySearchTerm, inventoryFilterCategory, showToast]);
 
-  const fetchBookings = useCallback(async () => {
+  // Modified fetchBookings to accept search and filter parameters
+  const fetchBookings = useCallback(async (search = bookingSearchTerm, status = bookingFilterStatus) => {
     try {
-      const response = await fetch('/api/bookings/rooms');
+      let url = '/api/bookings/rooms';
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      if (status) {
+        params.append('status', status);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setBookings(data);
@@ -154,7 +171,7 @@ function App() {
       console.error('Failed to fetch bookings:', error);
       showToast('Failed to load bookings. Please try again.', 'error');
     }
-  }, [showToast]);
+  }, [bookingSearchTerm, bookingFilterStatus, showToast]); // Dependencies for useCallback
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -193,7 +210,7 @@ function App() {
       // Fetch core data first
       await fetchRooms();
       await fetchInventory();
-      await fetchBookings();
+      await fetchBookings(); // Will use default search/filter states
       // Then fetch supplementary data
       await fetchCategories();
       await fetchClients();
@@ -229,7 +246,7 @@ function App() {
   }, [roomFilterStatus, fetchRooms, isLoading, roomSearchTerm]);
 
 
-  // NEW: Debounce logic for inventory search term
+  // Debounce logic for inventory search term
   const inventoryDebounceTimeoutRef = useRef(null); // Separate useRef for inventory
 
   const handleInventorySearchChange = (e) => {
@@ -247,12 +264,38 @@ function App() {
     }, 500); // 500ms debounce delay
   };
 
-  // NEW: Effect to re-fetch inventory when filter category changes (no debounce needed for dropdown)
+  // Effect to re-fetch inventory when filter category changes (no debounce needed for dropdown)
   useEffect(() => {
     if (!isLoading) { // Only refetch if initial load is complete
       fetchInventory(inventorySearchTerm, inventoryFilterCategory);
     }
   }, [inventoryFilterCategory, fetchInventory, isLoading, inventorySearchTerm]);
+
+
+  // NEW: Debounce logic for booking search term
+  const bookingDebounceTimeoutRef = useRef(null); // Separate useRef for bookings
+
+  const handleBookingSearchChange = (e) => {
+    const value = e.target.value;
+    setBookingSearchTerm(value); // Update the state immediately for input display
+
+    // Clear previous timeout
+    if (bookingDebounceTimeoutRef.current) {
+      clearTimeout(bookingDebounceTimeoutRef.current);
+    }
+
+    // Set a new timeout to call fetchBookings after a delay
+    bookingDebounceTimeoutRef.current = setTimeout(() => {
+      fetchBookings(value, bookingFilterStatus); // Pass the current value and status
+    }, 500); // 500ms debounce delay
+  };
+
+  // NEW: Effect to re-fetch bookings when filter status changes (no debounce needed for dropdown)
+  useEffect(() => {
+    if (!isLoading) { // Only refetch if initial load is complete
+      fetchBookings(bookingSearchTerm, bookingFilterStatus);
+    }
+  }, [bookingFilterStatus, fetchBookings, isLoading, bookingSearchTerm]);
 
 
   // --- Form Change Handlers ---
@@ -526,12 +569,34 @@ function App() {
         {activeTab === 'bookings' && (
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bookings Management</h2>
-            <button
-              onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
-              className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
-            >
-              + Add New Booking
-            </button>
+            {/* NEW: Search and Filter Controls for Bookings */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+              <button
+                onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
+                className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+              >
+                + Add New Booking
+              </button>
+              <input
+                type="text"
+                placeholder="Search by Room/Client..."
+                value={bookingSearchTerm}
+                onChange={handleBookingSearchChange}
+                className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+              <select
+                value={bookingFilterStatus}
+                onChange={(e) => setBookingFilterStatus(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
 
             {/* Add/Edit Booking Modal */}
             <Modal
@@ -837,7 +902,7 @@ function App() {
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Inventory Management</h2>
 
-            {/* NEW: Search and Filter Controls for Inventory */}
+            {/* Search and Filter Controls for Inventory */}
             <div className="flex flex-wrap gap-4 mb-4 items-center">
               <button
                 onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
