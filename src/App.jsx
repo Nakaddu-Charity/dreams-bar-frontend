@@ -454,7 +454,7 @@ function App() {
       return;
     }
     try {
-      // NEW: Send role with the request body for Inventory
+      // Send role with the request body for Inventory
       const response = await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -483,10 +483,11 @@ function App() {
       return;
     }
     try {
+      // NEW: Send role with the request body for Booking
       const response = await fetch('/api/bookings/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBooking),
+        body: JSON.stringify({ ...newBooking, role: currentUser.role }), // Include role
       });
       const data = await response.json();
       if (!response.ok) {
@@ -544,7 +545,7 @@ function App() {
     }
     if (!editingInventory) return;
     try {
-      // NEW: Send role with the request body for Inventory
+      // Send role with the request body for Inventory
       const response = await fetch(`/api/inventory?id=${editingInventory.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -574,10 +575,11 @@ function App() {
     }
     if (!editingBooking) return;
     try {
+      // NEW: Send role with the request body for Booking
       const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingBooking),
+        body: JSON.stringify({ ...editingBooking, role: currentUser.role }), // Include role
       });
       const data = await response.json();
       if (!response.ok) {
@@ -635,7 +637,7 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this inventory item?')) return;
     try {
-      // NEW: Send role with the query parameters for Inventory DELETE
+      // Send role with the query parameters for Inventory DELETE
       const response = await fetch(`/api/inventory?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
@@ -664,7 +666,8 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
     try {
-      const response = await fetch(`/api/bookings/rooms?id=${id}`, {
+      // NEW: Send role with the query parameters for Booking DELETE
+      const response = await fetch(`/api/bookings/rooms?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
       const data = await response.json();
