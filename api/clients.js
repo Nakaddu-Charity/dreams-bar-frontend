@@ -1,17 +1,20 @@
-// api/clients.js - Vercel Serverless Function for Clients API (ES Module)
+ // api/clients.js - Vercel Serverless Function for Clients API (ES Module)
 
-        import { Pool } from 'pg'; // Changed from require('pg')
+        import { Pool } from 'pg';
 
-        // Initialize PostgreSQL Pool using DATABASE_URL from Vercel Environment Variables
+        // Initialize PostgreSQL Pool globally to be reused across warm invocations
+        // Configure max connections and idle timeout for serverless environment
         const pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: {
                 rejectUnauthorized: false // Necessary for connecting to Supabase from Vercel
-            }
+            },
+            max: 2, // Keep a small number of max connections per function instance
+            idleTimeoutMillis: 5000 // Close idle connections after 5 seconds
         });
 
         // This is the main function that Vercel will execute for /api/clients requests
-        export default async (req, res) => { // Changed from module.exports
+        export default async (req, res) => {
             // Set CORS headers for all responses from this function
             res.setHeader('Access-Control-Allow-Origin', 'https://dreams-bar-frontend.vercel.app');
             res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS'); // Clients only needs GET
