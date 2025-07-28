@@ -41,7 +41,7 @@ const Toast = ({ message, type, onClose }) => {
 
 function App() {
   // State for active tab
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState('dashboard'); // Changed default to 'dashboard'
 
   // State for data lists
   const [rooms, setRooms] = useState([]);
@@ -58,7 +58,7 @@ function App() {
   const [inventorySearchTerm, setInventorySearchTerm] = useState('');
   const [inventoryFilterCategory, setInventoryFilterCategory] = useState(''); // Category ID or '' (all)
 
-  // NEW: States for Bookings search and filter
+  // States for Bookings search and filter
   const [bookingSearchTerm, setBookingSearchTerm] = useState('');
   const [bookingFilterStatus, setBookingFilterStatus] = useState(''); // 'Confirmed', 'Pending', 'Cancelled', 'Completed', '' (all)
 
@@ -148,7 +148,6 @@ function App() {
     }
   }, [inventorySearchTerm, inventoryFilterCategory, showToast]);
 
-  // Modified fetchBookings to accept search and filter parameters
   const fetchBookings = useCallback(async (search = bookingSearchTerm, status = bookingFilterStatus) => {
     try {
       let url = '/api/bookings/rooms';
@@ -171,7 +170,7 @@ function App() {
       console.error('Failed to fetch bookings:', error);
       showToast('Failed to load bookings. Please try again.', 'error');
     }
-  }, [bookingSearchTerm, bookingFilterStatus, showToast]); // Dependencies for useCallback
+  }, [bookingSearchTerm, bookingFilterStatus, showToast]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -210,7 +209,7 @@ function App() {
       // Fetch core data first
       await fetchRooms();
       await fetchInventory();
-      await fetchBookings(); // Will use default search/filter states
+      await fetchBookings();
       // Then fetch supplementary data
       await fetchCategories();
       await fetchClients();
@@ -272,7 +271,7 @@ function App() {
   }, [inventoryFilterCategory, fetchInventory, isLoading, inventorySearchTerm]);
 
 
-  // NEW: Debounce logic for booking search term
+  // Debounce logic for booking search term
   const bookingDebounceTimeoutRef = useRef(null); // Separate useRef for bookings
 
   const handleBookingSearchChange = (e) => {
@@ -290,7 +289,7 @@ function App() {
     }, 500); // 500ms debounce delay
   };
 
-  // NEW: Effect to re-fetch bookings when filter status changes (no debounce needed for dropdown)
+  // Effect to re-fetch bookings when filter status changes (no debounce needed for dropdown)
   useEffect(() => {
     if (!isLoading) { // Only refetch if initial load is complete
       fetchBookings(bookingSearchTerm, bookingFilterStatus);
@@ -522,6 +521,21 @@ function App() {
   };
 
 
+  // --- Dashboard Calculations ---
+  const totalRooms = rooms.length;
+  const availableRooms = rooms.filter(room => room.status === 'Available').length;
+  const occupiedRooms = rooms.filter(room => room.status === 'Occupied').length;
+  const maintenanceRooms = rooms.filter(room => room.status === 'Maintenance').length;
+
+  const totalBookings = bookings.length;
+  const confirmedBookings = bookings.filter(booking => booking.status === 'Confirmed').length;
+  const pendingBookings = bookings.filter(booking => booking.status === 'Pending').length;
+  const cancelledBookings = bookings.filter(booking => booking.status === 'Cancelled').length;
+
+  const lowStockItems = inventory.filter(item => item.quantity <= item.reorder_level);
+  const totalInventoryItems = inventory.length;
+
+
   // --- Render UI ---
   // Show a loading indicator if data is still being fetched
   if (isLoading) {
@@ -539,6 +553,14 @@ function App() {
       </header>
 
       <nav className="flex justify-center space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
+            activeTab === 'dashboard' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
+          }`}
+        >
+          Dashboard
+        </button>
         <button
           onClick={() => setActiveTab('bookings')}
           className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
@@ -566,10 +588,52 @@ function App() {
       </nav>
 
       <main className="bg-white p-6 rounded-lg shadow-lg">
+        {activeTab === 'dashboard' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Overview Dashboard</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Room Summary Card */}
+              <div className="bg-blue-50 p-6 rounded-lg shadow-md border-l-4 border-blue-600">
+                <h3 className="text-xl font-semibold text-blue-800 mb-3">Room Status</h3>
+                <p className="text-gray-700 text-lg">Total Rooms: <span className="font-bold">{totalRooms}</span></p>
+                <p className="text-green-600 text-lg">Available: <span className="font-bold">{availableRooms}</span></p>
+                <p className="text-yellow-600 text-lg">Occupied: <span className="font-bold">{occupiedRooms}</span></p>
+                <p className="text-red-600 text-lg">Maintenance: <span className="font-bold">{maintenanceRooms}</span></p>
+              </div>
+
+              {/* Booking Summary Card */}
+              <div className="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-600">
+                <h3 className="text-xl font-semibold text-green-800 mb-3">Booking Overview</h3>
+                <p className="text-gray-700 text-lg">Total Bookings: <span className="font-bold">{totalBookings}</span></p>
+                <p className="text-blue-600 text-lg">Confirmed: <span className="font-bold">{confirmedBookings}</span></p>
+                <p className="text-orange-600 text-lg">Pending: <span className="font-bold">{pendingBookings}</span></p>
+                <p className="text-red-600 text-lg">Cancelled: <span className="font-bold">{cancelledBookings}</span></p>
+              </div>
+
+              {/* Inventory Summary Card */}
+              <div className="bg-purple-50 p-6 rounded-lg shadow-md border-l-4 border-purple-600">
+                <h3 className="text-xl font-semibold text-purple-800 mb-3">Inventory Status</h3>
+                <p className="text-gray-700 text-lg">Total Inventory Items: <span className="font-bold">{totalInventoryItems}</span></p>
+                <p className="text-red-600 text-lg">Low Stock Items: <span className="font-bold">{lowStockItems.length}</span></p>
+                {lowStockItems.length > 0 && (
+                  <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
+                    {lowStockItems.slice(0, 5).map(item => ( // Show first 5 low stock items
+                      <li key={item.id}>{item.name} ({item.quantity} {item.unit})</li>
+                    ))}
+                    {lowStockItems.length > 5 && <li>...and {lowStockItems.length - 5} more</li>}
+                  </ul>
+                )}
+                {lowStockItems.length === 0 && <p className="text-green-600 text-sm">All inventory levels are good!</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'bookings' && (
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bookings Management</h2>
-            {/* NEW: Search and Filter Controls for Bookings */}
+            {/* Search and Filter Controls for Bookings */}
             <div className="flex flex-wrap gap-4 mb-4 items-center">
               <button
                 onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
