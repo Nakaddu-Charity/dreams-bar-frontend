@@ -50,6 +50,9 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [clients, setClients] = useState([]);
 
+  // Loading state for initial data fetch
+  const [isLoading, setIsLoading] = useState(true); // New loading state
+
   // State for Add/Edit forms visibility
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
@@ -80,7 +83,7 @@ function App() {
   // --- Fetch Data Functions (READ) ---
   // These functions are called to refresh the data displayed in the tables.
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
       const response = await fetch('/api/rooms');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -90,9 +93,9 @@ function App() {
       console.error('Failed to fetch rooms:', error);
       showToast('Failed to load rooms. Please try again.', 'error');
     }
-  };
+  }, [showToast]); // Dependency for useCallback
 
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     try {
       const response = await fetch('/api/inventory');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -102,9 +105,9 @@ function App() {
       console.error('Failed to fetch inventory:', error);
       showToast('Failed to load inventory items. Please try again.', 'error');
     }
-  };
+  }, [showToast]); // Dependency for useCallback
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       const response = await fetch('/api/bookings/rooms');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -114,9 +117,9 @@ function App() {
       console.error('Failed to fetch bookings:', error);
       showToast('Failed to load bookings. Please try again.', 'error');
     }
-  };
+  }, [showToast]); // Dependency for useCallback
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/categories');
       if (!response.ok) {
@@ -129,9 +132,9 @@ function App() {
       console.error('Error fetching categories:', error);
       showToast('Failed to load categories. Please try again.', 'error');
     }
-  };
+  }, [showToast]); // Dependency for useCallback
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
       const response = await fetch('/api/clients');
       if (!response.ok) {
@@ -144,16 +147,23 @@ function App() {
       console.error('Error fetching clients:', error);
       showToast('Failed to load clients. Please try again.', 'error');
     }
-  };
+  }, [showToast]); // Dependency for useCallback
 
-  // Initial data load on component mount
+  // Initial data load on component mount - NOW SEQUENTIAL
   useEffect(() => {
-    fetchRooms();
-    fetchInventory();
-    fetchBookings();
-    fetchCategories();
-    fetchClients();
-  }, [fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]); // Added dependencies for useCallback
+    const loadAllDataSequentially = async () => {
+      setIsLoading(true); // Start loading
+      // Fetch core data first
+      await fetchRooms();
+      await fetchInventory();
+      await fetchBookings();
+      // Then fetch supplementary data
+      await fetchCategories();
+      await fetchClients();
+      setIsLoading(false); // End loading
+    };
+    loadAllDataSequentially();
+  }, [fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]);
 
 
   // --- Form Change Handlers ---
@@ -389,6 +399,15 @@ function App() {
 
 
   // --- Render UI ---
+  // Show a loading indicator if data is still being fetched
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-blue-600 text-xl font-semibold">Loading application data...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 font-sans antialiased">
       <header className="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6">
