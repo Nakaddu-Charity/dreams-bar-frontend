@@ -3,16 +3,15 @@
 import { Pool } from 'pg';
 
 // Initialize PostgreSQL Pool globally to be reused across warm invocations
-// Configure max connections, idle timeout, connection timeout, and allowExitOnIdle for serverless environment
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Necessary for connecting to Supabase from Vercel
+        rejectUnauthorized: false
     },
-    max: 2, // Keep a small number of max connections per function instance
-    idleTimeoutMillis: 5000, // Close idle connections after 5 seconds
-    connectionTimeoutMillis: 10000, // Give 10 seconds to establish a connection
-    allowExitOnIdle: true // Crucial for serverless: allow process to exit if no clients are active
+    max: 2,
+    idleTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
+    allowExitOnIdle: true
 });
 
 // This is the main function that Vercel will execute for /api/rooms requests
@@ -31,14 +30,13 @@ export default async (req, res) => {
     try {
         switch (req.method) {
             case 'GET':
-                const { search, status } = req.query; // Extract search and status from query parameters
+                const { search, status } = req.query;
                 let query = 'SELECT * FROM rooms';
                 const queryParams = [];
                 const conditions = [];
                 let paramIndex = 1;
 
                 if (search) {
-                    // Use ILIKE for case-insensitive search
                     conditions.push(`room_number ILIKE $${paramIndex++}`);
                     queryParams.push(`%${search}%`);
                 }
@@ -51,14 +49,20 @@ export default async (req, res) => {
                     query += ' WHERE ' + conditions.join(' AND ');
                 }
 
-                query += ' ORDER BY id ASC'; // Always order by ID
+                query += ' ORDER BY id ASC';
 
                 const getResult = await pool.query(query, queryParams);
                 res.status(200).json(getResult.rows);
                 break;
 
             case 'POST':
-                const { room_number, type, price_per_night, status: postStatus } = req.body; // Renamed status to postStatus to avoid conflict
+                // NEW: Backend RBAC Check for POST (Create Room) - Only Admin
+                const postRole = req.body.role; // Assuming role is sent in body for now
+                if (postRole !== 'admin') {
+                    return res.status(403).json({ message: 'Forbidden: Only administrators can add rooms.' });
+                }
+
+                const { room_number, type, price_per_night, status: postStatus } = req.body;
                 const postResult = await pool.query(
                     'INSERT INTO rooms (room_number, type, price_per_night, status) VALUES ($1, $2, $3, $4) RETURNING *',
                     [room_number, type, price_per_night, postStatus]
@@ -67,6 +71,12 @@ export default async (req, res) => {
                 break;
 
             case 'PUT':
+                // NEW: Backend RBAC Check for PUT (Update Room) - Only Admin
+                const putRole = req.body.role; // Assuming role is sent in body for now
+                if (putRole !== 'admin') {
+                    return res.status(403).json({ message: 'Forbidden: Only administrators can update rooms.' });
+                }
+
                 const { id: putId } = req.query;
                 const { room_number: putRoomNumber, type: putType, price_per_night: putPricePerNight, status: putStatus } = req.body;
                 const putResult = await pool.query(
@@ -81,6 +91,12 @@ export default async (req, res) => {
                 break;
 
             case 'DELETE':
+                // NEW: Backend RBAC Check for DELETE (Delete Room) - Only Admin
+                const deleteRole = req.query.role; // Assuming role is sent in query for DELETE (simpler for DELETE method)
+                if (deleteRole !== 'admin') {
+                    return res.status(403).json({ message: 'Forbidden: Only administrators can delete rooms.' });
+                }
+
                 const { id: deleteId } = req.query;
                 const deleteResult = await pool.query('DELETE FROM rooms WHERE id = $1 RETURNING id', [deleteId]);
                 if (deleteResult.rows.length > 0) {

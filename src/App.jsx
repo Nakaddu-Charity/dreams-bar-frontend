@@ -107,7 +107,7 @@ function App() {
     return isNaN(num) ? null : num; // Return null for empty/invalid numbers
   };
 
-  // NEW: RBAC Helper Function
+  // RBAC Helper Function
   const canPerformAction = useCallback((requiredRole) => {
     if (!currentUser) return false; // Not logged in
     if (currentUser.role === 'admin') return true; // Admin can do anything
@@ -425,19 +425,23 @@ function App() {
       return;
     }
     try {
+      // NEW: Send role with the request body
       const response = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRoom),
+        body: JSON.stringify({ ...newRoom, role: currentUser.role }), // Include role
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json(); // Parse response to get potential error message
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Room added successfully!', 'success');
       setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' });
       setShowRoomForm(false);
       fetchRooms();
     } catch (error) {
       console.error('Failed to add room:', error);
-      showToast('Failed to add room. Please try again.', 'error');
+      showToast(`Failed to add room: ${error.message}`, 'error');
     }
   };
 
@@ -455,14 +459,17 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newInventory),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Inventory item added successfully!', 'success');
       setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
       setShowInventoryForm(false);
       fetchInventory();
     } catch (error) {
       console.error('Failed to add inventory item:', error);
-      showToast('Failed to add inventory item. Please try again.', 'error');
+      showToast(`Failed to add inventory item: ${error.message}`, 'error');
     }
   };
 
@@ -470,7 +477,7 @@ function App() {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
     // Frontend RBAC check
-    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can add bookings
+    if (!canPerformAction('admin') && !canPerformAction('staff')) {
       showToast('You do not have permission to add bookings.', 'error');
       return;
     }
@@ -480,14 +487,17 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBooking),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Booking added successfully!', 'success');
       setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
       setShowBookingForm(false);
       fetchBookings();
     } catch (error) {
       console.error('Failed to add booking:', error);
-      showToast('Failed to add booking. Please try again.', 'error');
+      showToast(`Failed to add booking: ${error.message}`, 'error');
     }
   };
 
@@ -503,19 +513,23 @@ function App() {
     }
     if (!editingRoom) return;
     try {
+      // NEW: Send role with the request body
       const response = await fetch(`/api/rooms?id=${editingRoom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingRoom),
+        body: JSON.stringify({ ...editingRoom, role: currentUser.role }), // Include role
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Room updated successfully!', 'success');
       setEditingRoom(null);
       setShowRoomForm(false);
       fetchRooms();
     } catch (error) {
       console.error('Failed to update room:', error);
-      showToast('Failed to update room. Please try again.', 'error');
+      showToast(`Failed to update room: ${error.message}`, 'error');
     }
   };
 
@@ -534,14 +548,17 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingInventory),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Inventory item updated successfully!', 'success');
       setEditingInventory(null);
       setShowInventoryForm(false);
       fetchInventory();
     } catch (error) {
       console.error('Failed to update inventory item:', error);
-      showToast('Failed to update inventory item. Please try again.', 'error');
+      showToast(`Failed to update inventory item: ${error.message}`, 'error');
     }
   };
 
@@ -549,7 +566,7 @@ function App() {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
     // Frontend RBAC check
-    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can update bookings
+    if (!canPerformAction('admin') && !canPerformAction('staff')) {
       showToast('You do not have permission to update bookings.', 'error');
       return;
     }
@@ -560,14 +577,17 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingBooking),
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
       showToast('Booking updated successfully!', 'success');
       setEditingBooking(null);
       setShowBookingForm(false);
       fetchBookings();
     } catch (error) {
       console.error('Failed to update booking:', error);
-      showToast('Failed to update booking. Please try again.', 'error');
+      showToast(`Failed to update booking: ${error.message}`, 'error');
     }
   };
 
@@ -582,23 +602,25 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
-      const response = await fetch(`/api/rooms?id=${id}`, {
+      // NEW: Send role with the query parameters for DELETE
+      const response = await fetch(`/api/rooms?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
+      const data = await response.json(); // Parse response to get potential error message
       if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(`Room with ID ${id} not found on server for deletion.`);
-          showToast(`Room with ID ${id} not found or already deleted.`, 'error');
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Check for 403 specifically to show backend message
+        if (response.status === 403) {
+          throw new Error(data.message || 'Forbidden: You do not have permission.');
         }
+        // For other errors, check if data.message exists, otherwise use generic
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       } else {
         showToast('Room deleted successfully!', 'success');
         fetchRooms();
       }
     } catch (error) {
       console.error('Failed to delete room:', error);
-      showToast('Failed to delete room. Please try again.', 'error');
+      showToast(`Failed to delete room: ${error.message}`, 'error');
     }
   };
 
@@ -614,27 +636,26 @@ function App() {
       const response = await fetch(`/api/inventory?id=${id}`, {
         method: 'DELETE',
       });
+      const data = await response.json();
       if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(`Inventory item with ID ${id} not found on server for deletion.`);
-          showToast(`Inventory item with ID ${id} not found or already deleted.`, 'error');
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 403) {
+          throw new Error(data.message || 'Forbidden: You do not have permission.');
         }
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       } else {
         showToast('Inventory item deleted successfully!', 'success');
         fetchInventory();
       }
     } catch (error) {
       console.error('Failed to delete inventory item:', error);
-      showToast('Failed to delete inventory item. Please try again.', 'error');
+      showToast(`Failed to delete inventory item: ${error.message}`, 'error');
     }
   };
 
   const deleteBooking = async (id) => {
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
     // Frontend RBAC check
-    if (!canPerformAction('admin')) { // Only admin can delete bookings
+    if (!canPerformAction('admin')) {
       showToast('You do not have permission to delete bookings.', 'error');
       return;
     }
@@ -643,20 +664,19 @@ function App() {
       const response = await fetch(`/api/bookings/rooms?id=${id}`, {
         method: 'DELETE',
       });
+      const data = await response.json();
       if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(`Booking with ID ${id} not found on server for deletion.`);
-          showToast(`Booking with ID ${id} not found or already deleted.`, 'error');
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 403) {
+          throw new Error(data.message || 'Forbidden: You do not have permission.');
         }
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       } else {
         showToast('Booking deleted successfully!', 'success');
         fetchBookings();
       }
     } catch (error) {
       console.error('Failed to delete booking:', error);
-      showToast('Failed to delete booking. Please try again.', 'error');
+      showToast(`Failed to delete booking: ${error.message}`, 'error');
     }
   };
 
