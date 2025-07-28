@@ -1,9 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './App.css'; // Assuming you have App.css for basic styling
+
+// --- Reusable Modal Component ---
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4">
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        </div>
+        <div>{children}</div>
+      </div>
+    </div>
+  );
+};
+
+// --- Reusable Toast Notification Component ---
+const Toast = ({ message, type, onClose }) => {
+  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+  const textColor = 'text-white';
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Toast disappears after 3 seconds
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg ${bgColor} ${textColor} z-50 transition-opacity duration-300`}>
+      {message}
+      <button onClick={onClose} className="ml-4 font-bold">&times;</button>
+    </div>
+  );
+};
+
 
 function App() {
   // State for active tab
-  const [activeTab, setActiveTab] = useState('bookings'); // Default tab
+  const [activeTab, setActiveTab] = useState('bookings');
 
   // State for data lists
   const [rooms, setRooms] = useState([]);
@@ -12,25 +50,31 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [clients, setClients] = useState([]);
 
-  // State for Add forms
-  const [showAddRoomForm, setShowAddRoomForm] = useState(false);
-  const [showAddInventoryForm, setShowAddInventoryForm] = useState(false);
-  const [showAddBookingForm, setShowAddBookingForm] = useState(false);
+  // State for Add/Edit forms visibility
+  const [showRoomForm, setShowRoomForm] = useState(false);
+  const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
-  // State for Edit forms
-  const [showEditRoomForm, setShowEditRoomForm] = useState(false);
-  const [editingRoom, setEditingRoom] = useState(null); // Holds the room data being edited
-
-  const [showEditInventoryForm, setShowEditInventoryForm] = useState(false);
-  const [editingInventory, setEditingInventory] = useState(null); // Holds the inventory data being edited
-
-  const [showEditBookingForm, setShowEditBookingForm] = useState(false);
-  const [editingBooking, setEditingBooking] = useState(null); // Holds the booking data being edited
+  // State for item being edited (null for add, object for edit)
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [editingInventory, setEditingInventory] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   // State for new item data (used by Add forms)
   const [newRoom, setNewRoom] = useState({ room_number: '', type: '', price_per_night: '', status: 'Available' });
   const [newInventory, setNewInventory] = useState({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
   const [newBooking, setNewBooking] = useState({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
+
+  // State for Toast Notifications
+  const [toast, setToast] = useState(null); // { message: '...', type: 'success' | 'error' }
+
+  const showToast = useCallback((message, type) => {
+    setToast({ message, type });
+  }, []);
+
+  const closeToast = useCallback(() => {
+    setToast(null);
+  }, []);
 
 
   // --- Fetch Data Functions (READ) ---
@@ -44,7 +88,7 @@ function App() {
       setRooms(data);
     } catch (error) {
       console.error('Failed to fetch rooms:', error);
-      // alert('Failed to load rooms. Please try again.'); // Keep alert for critical errors
+      showToast('Failed to load rooms. Please try again.', 'error');
     }
   };
 
@@ -56,7 +100,7 @@ function App() {
       setInventory(data);
     } catch (error) {
       console.error('Failed to fetch inventory:', error);
-      // alert('Failed to load inventory items. Please try again.');
+      showToast('Failed to load inventory items. Please try again.', 'error');
     }
   };
 
@@ -68,7 +112,7 @@ function App() {
       setBookings(data);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
-      // alert('Failed to load bookings. Please try again.');
+      showToast('Failed to load bookings. Please try again.', 'error');
     }
   };
 
@@ -83,7 +127,7 @@ function App() {
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      // alert('Failed to load categories. Please try again.');
+      showToast('Failed to load categories. Please try again.', 'error');
     }
   };
 
@@ -98,7 +142,7 @@ function App() {
       setClients(data);
     } catch (error) {
       console.error('Error fetching clients:', error);
-      // alert('Failed to load clients. Please try again.');
+      showToast('Failed to load clients. Please try again.', 'error');
     }
   };
 
@@ -109,46 +153,40 @@ function App() {
     fetchBookings();
     fetchCategories();
     fetchClients();
-  }, []);
+  }, [fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]); // Added dependencies for useCallback
 
 
   // --- Form Change Handlers ---
   // These update the state variables as users type in the forms.
 
   const handleNewRoomChange = (e) => {
-    const { name, value } = e.target;
-    setNewRoom(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setNewRoom(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
   const handleEditRoomChange = (e) => {
-    const { name, value } = e.target;
-    setEditingRoom(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setEditingRoom(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
   const handleNewInventoryChange = (e) => {
-    const { name, value } = e.target;
-    setNewInventory(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setNewInventory(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
   const handleEditInventoryChange = (e) => {
     const { name, value, type } = e.target;
-    // For number inputs, parse value to float if not empty, otherwise null or 0
-    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
-    setEditingInventory(prev => ({ ...prev, [name]: newValue }));
+    setEditingInventory(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
   const handleNewBookingChange = (e) => {
     const { name, value, type } = e.target;
-    // For number inputs, parse value to float if not empty, otherwise null or 0
-    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
-    setNewBooking(prev => ({ ...prev, [name]: newValue }));
+    setNewBooking(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
   const handleEditBookingChange = (e) => {
     const { name, value, type } = e.target;
-    // For number inputs, parse value to float if not empty, otherwise null or 0
-    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
-    setEditingBooking(prev => ({ ...prev, [name]: newValue }));
+    setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
 
@@ -164,13 +202,13 @@ function App() {
         body: JSON.stringify(newRoom),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Room added successfully!');
+      showToast('Room added successfully!', 'success');
       setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' });
-      setShowAddRoomForm(false);
-      fetchRooms(); // Refresh data
+      setShowRoomForm(false);
+      fetchRooms();
     } catch (error) {
       console.error('Failed to add room:', error);
-      alert('Failed to add room. Please try again.');
+      showToast('Failed to add room. Please try again.', 'error');
     }
   };
 
@@ -183,13 +221,13 @@ function App() {
         body: JSON.stringify(newInventory),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Inventory item added successfully!');
+      showToast('Inventory item added successfully!', 'success');
       setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
-      setShowAddInventoryForm(false);
-      fetchInventory(); // Refresh data
+      setShowInventoryForm(false);
+      fetchInventory();
     } catch (error) {
       console.error('Failed to add inventory item:', error);
-      alert('Failed to add inventory item. Please try again.');
+      showToast('Failed to add inventory item. Please try again.', 'error');
     }
   };
 
@@ -202,13 +240,13 @@ function App() {
         body: JSON.stringify(newBooking),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Booking added successfully!');
+      showToast('Booking added successfully!', 'success');
       setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
-      setShowAddBookingForm(false);
-      fetchBookings(); // Refresh data
+      setShowBookingForm(false);
+      fetchBookings();
     } catch (error) {
       console.error('Failed to add booking:', error);
-      alert('Failed to add booking. Please try again.');
+      showToast('Failed to add booking. Please try again.', 'error');
     }
   };
 
@@ -220,20 +258,19 @@ function App() {
     e.preventDefault();
     if (!editingRoom) return;
     try {
-      // For Vercel serverless functions, ID in query parameter is often more reliable for PUT
       const response = await fetch(`/api/rooms?id=${editingRoom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingRoom),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Room updated successfully!');
-      setEditingRoom(null); // Clear editing state
-      setShowEditRoomForm(false); // Hide form
-      fetchRooms(); // Refresh data
+      showToast('Room updated successfully!', 'success');
+      setEditingRoom(null);
+      setShowRoomForm(false);
+      fetchRooms();
     } catch (error) {
       console.error('Failed to update room:', error);
-      alert('Failed to update room. Please try again.');
+      showToast('Failed to update room. Please try again.', 'error');
     }
   };
 
@@ -247,13 +284,13 @@ function App() {
         body: JSON.stringify(editingInventory),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Inventory item updated successfully!');
+      showToast('Inventory item updated successfully!', 'success');
       setEditingInventory(null);
-      setShowEditInventoryForm(false);
+      setShowInventoryForm(false);
       fetchInventory();
     } catch (error) {
       console.error('Failed to update inventory item:', error);
-      alert('Failed to update inventory item. Please try again.');
+      showToast('Failed to update inventory item. Please try again.', 'error');
     }
   };
 
@@ -267,13 +304,13 @@ function App() {
         body: JSON.stringify(editingBooking),
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      console.log('Booking updated successfully!');
+      showToast('Booking updated successfully!', 'success');
       setEditingBooking(null);
-      setShowEditBookingForm(false);
+      setShowBookingForm(false);
       fetchBookings();
     } catch (error) {
       console.error('Failed to update booking:', error);
-      alert('Failed to update booking. Please try again.');
+      showToast('Failed to update booking. Please try again.', 'error');
     }
   };
 
@@ -284,24 +321,23 @@ function App() {
   const deleteRoom = async (id) => {
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
-      // For Vercel serverless functions, ID in query parameter is often more reliable for DELETE
       const response = await fetch(`/api/rooms?id=${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
-        // Check for 404 specifically, as the frontend might call it before backend is ready for delete
         if (response.status === 404) {
-          console.warn(`Room with ID ${id} not found on server for deletion. It might already be deleted or URL is incorrect.`);
-          alert(`Room with ID ${id} not found or already deleted.`);
+          console.warn(`Room with ID ${id} not found on server for deletion.`);
+          showToast(`Room with ID ${id} not found or already deleted.`, 'error');
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+      } else {
+        showToast('Room deleted successfully!', 'success');
+        fetchRooms();
       }
-      console.log('Room deleted successfully!');
-      fetchRooms(); // Refresh data
     } catch (error) {
       console.error('Failed to delete room:', error);
-      alert('Failed to delete room. Please try again.');
+      showToast('Failed to delete room. Please try again.', 'error');
     }
   };
 
@@ -314,16 +350,17 @@ function App() {
       if (!response.ok) {
         if (response.status === 404) {
           console.warn(`Inventory item with ID ${id} not found on server for deletion.`);
-          alert(`Inventory item with ID ${id} not found or already deleted.`);
+          showToast(`Inventory item with ID ${id} not found or already deleted.`, 'error');
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+      } else {
+        showToast('Inventory item deleted successfully!', 'success');
+        fetchInventory();
       }
-      console.log('Inventory item deleted successfully!');
-      fetchInventory();
     } catch (error) {
       console.error('Failed to delete inventory item:', error);
-      alert('Failed to delete inventory item. Please try again.');
+      showToast('Failed to delete inventory item. Please try again.', 'error');
     }
   };
 
@@ -336,16 +373,17 @@ function App() {
       if (!response.ok) {
         if (response.status === 404) {
           console.warn(`Booking with ID ${id} not found on server for deletion.`);
-          alert(`Booking with ID ${id} not found or already deleted.`);
+          showToast(`Booking with ID ${id} not found or already deleted.`, 'error');
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+      } else {
+        showToast('Booking deleted successfully!', 'success');
+        fetchBookings();
       }
-      console.log('Booking deleted successfully!');
-      fetchBookings();
     } catch (error) {
       console.error('Failed to delete booking:', error);
-      alert('Failed to delete booking. Please try again.');
+      showToast('Failed to delete booking. Please try again.', 'error');
     }
   };
 
@@ -389,24 +427,27 @@ function App() {
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bookings Management</h2>
             <button
-              onClick={() => { setShowAddBookingForm(true); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
+              onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
               className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
             >
               + Add New Booking
             </button>
 
-            {/* Add/Edit Booking Form */}
-            {(showAddBookingForm || showEditBookingForm) && (
-              <form onSubmit={showAddBookingForm ? addBooking : updateBooking} className="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-700">{showAddBookingForm ? 'Add New Booking' : `Edit Booking ID: ${editingBooking?.id}`}</h3>
+            {/* Add/Edit Booking Modal */}
+            <Modal
+              isOpen={showBookingForm}
+              onClose={() => { setShowBookingForm(false); setEditingBooking(null); }}
+              title={editingBooking ? `Edit Booking ID: ${editingBooking.id}` : 'Add New Booking'}
+            >
+              <form onSubmit={editingBooking ? updateBooking : addBooking} className="p-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="booking_room_id" className="block text-sm font-medium text-gray-700">Room</label>
                     <select
                       id="booking_room_id"
                       name="room_id"
-                      value={showAddBookingForm ? newBooking.room_id : editingBooking?.room_id || ''}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? editingBooking.room_id : newBooking.room_id}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -421,8 +462,8 @@ function App() {
                     <select
                       id="booking_client_id"
                       name="client_id"
-                      value={showAddBookingForm ? newBooking.client_id : editingBooking?.client_id || ''}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? editingBooking.client_id : newBooking.client_id}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -438,8 +479,8 @@ function App() {
                       type="date"
                       id="check_in_date"
                       name="check_in_date"
-                      value={showAddBookingForm ? newBooking.check_in_date : (editingBooking?.check_in_date ? new Date(editingBooking.check_in_date).toISOString().split('T')[0] : '')}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? (editingBooking.check_in_date ? new Date(editingBooking.check_in_date).toISOString().split('T')[0] : '') : newBooking.check_in_date}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -450,8 +491,8 @@ function App() {
                       type="date"
                       id="check_out_date"
                       name="check_out_date"
-                      value={showAddBookingForm ? newBooking.check_out_date : (editingBooking?.check_out_date ? new Date(editingBooking.check_out_date).toISOString().split('T')[0] : '')}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? (editingBooking.check_out_date ? new Date(editingBooking.check_out_date).toISOString().split('T')[0] : '') : newBooking.check_out_date}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -459,11 +500,11 @@ function App() {
                   <div>
                     <label htmlFor="total_price" className="block text-sm font-medium text-gray-700">Total Price</label>
                     <input
-                      type="number" // Ensure type is number
+                      type="number"
                       id="total_price"
                       name="total_price"
-                      value={showAddBookingForm ? newBooking.total_price : editingBooking?.total_price || ''}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? editingBooking.total_price : newBooking.total_price}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -473,8 +514,8 @@ function App() {
                     <select
                       id="booking_status"
                       name="status"
-                      value={showAddBookingForm ? newBooking.status : editingBooking?.status || ''}
-                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
+                      value={editingBooking ? editingBooking.status : newBooking.status}
+                      onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -485,10 +526,10 @@ function App() {
                     </select>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-3 mt-4">
                   <button
                     type="button"
-                    onClick={() => { setShowAddBookingForm(false); setShowEditBookingForm(false); setEditingBooking(null); }}
+                    onClick={() => { setShowBookingForm(false); setEditingBooking(null); }}
                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
                     Cancel
@@ -497,11 +538,11 @@ function App() {
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
-                    {showAddBookingForm ? 'Add Booking' : 'Update Booking'}
+                    {editingBooking ? 'Update Booking' : 'Add Booking'}
                   </button>
                 </div>
               </form>
-            )}
+            </Modal>
 
             {bookings.length > 0 ? (
               <div className="overflow-x-auto">
@@ -529,7 +570,7 @@ function App() {
                         <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.status}</td>
                         <td className="py-3 px-4 border-b text-sm">
-                          <button onClick={() => { setEditingBooking(booking); setShowEditBookingForm(true); setShowAddBookingForm(false); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                          <button onClick={() => { setEditingBooking(booking); setShowBookingForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
                           <button onClick={() => deleteBooking(booking.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         </td>
                       </tr>
@@ -547,16 +588,19 @@ function App() {
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Rooms Management</h2>
             <button
-              onClick={() => { setShowAddRoomForm(true); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
+              onClick={() => { setShowRoomForm(true); setEditingRoom(null); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
               className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
             >
               + Add New Room
             </button>
 
-            {/* Add/Edit Room Form */}
-            {(showAddRoomForm || showEditRoomForm) && (
-              <form onSubmit={showAddRoomForm ? addRoom : updateRoom} className="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-700">{showAddRoomForm ? 'Add New Room' : `Edit Room ID: ${editingRoom?.id}`}</h3>
+            {/* Add/Edit Room Modal */}
+            <Modal
+              isOpen={showRoomForm}
+              onClose={() => { setShowRoomForm(false); setEditingRoom(null); }}
+              title={editingRoom ? `Edit Room ID: ${editingRoom.id}` : 'Add New Room'}
+            >
+              <form onSubmit={editingRoom ? updateRoom : addRoom} className="p-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="room_number" className="block text-sm font-medium text-gray-700">Room Number</label>
@@ -564,8 +608,8 @@ function App() {
                       type="text"
                       id="room_number"
                       name="room_number"
-                      value={showAddRoomForm ? newRoom.room_number : editingRoom?.room_number || ''}
-                      onChange={showAddRoomForm ? handleNewRoomChange : handleEditRoomChange}
+                      value={editingRoom ? editingRoom.room_number : newRoom.room_number}
+                      onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -575,8 +619,8 @@ function App() {
                     <select
                       id="type"
                       name="type"
-                      value={showAddRoomForm ? newRoom.type : editingRoom?.type || ''}
-                      onChange={showAddRoomForm ? handleNewRoomChange : handleEditRoomChange}
+                      value={editingRoom ? editingRoom.type : newRoom.type}
+                      onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -592,8 +636,8 @@ function App() {
                       type="number"
                       id="price_per_night"
                       name="price_per_night"
-                      value={showAddRoomForm ? newRoom.price_per_night : editingRoom?.price_per_night || ''}
-                      onChange={showAddRoomForm ? handleNewRoomChange : handleEditRoomChange}
+                      value={editingRoom ? editingRoom.price_per_night : newRoom.price_per_night}
+                      onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -603,8 +647,8 @@ function App() {
                     <select
                       id="status"
                       name="status"
-                      value={showAddRoomForm ? newRoom.status : editingRoom?.status || ''}
-                      onChange={showAddRoomForm ? handleNewRoomChange : handleEditRoomChange}
+                      value={editingRoom ? editingRoom.status : newRoom.status}
+                      onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -614,10 +658,10 @@ function App() {
                     </select>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-3 mt-4">
                   <button
                     type="button"
-                    onClick={() => { setShowAddRoomForm(false); setShowEditRoomForm(false); setEditingRoom(null); }}
+                    onClick={() => { setShowRoomForm(false); setEditingRoom(null); }}
                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
                     Cancel
@@ -626,11 +670,11 @@ function App() {
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
-                    {showAddRoomForm ? 'Add Room' : 'Update Room'}
+                    {editingRoom ? 'Update Room' : 'Add Room'}
                   </button>
                 </div>
               </form>
-            )}
+            </Modal>
 
             {rooms.length > 0 ? (
               <div className="overflow-x-auto">
@@ -650,11 +694,11 @@ function App() {
                       <tr key={room.id} className="hover:bg-gray-50">
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.id}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.room_number}</td>
-                        <td className="py-3 px-4 border-b text-sm text-gray-700">${room.price_per_night}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.type}</td>
+                        <td className="py-3 px-4 border-b text-sm text-gray-700">${room.price_per_night}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.status}</td>
                         <td className="py-3 px-4 border-b text-sm">
-                          <button onClick={() => { setEditingRoom(room); setShowEditRoomForm(true); setShowAddRoomForm(false); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                          <button onClick={() => { setEditingRoom(room); setShowRoomForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
                           <button onClick={() => deleteRoom(room.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         </td>
                       </tr>
@@ -672,16 +716,19 @@ function App() {
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Inventory Management</h2>
             <button
-              onClick={() => { setShowAddInventoryForm(true); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
+              onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
               className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
             >
               + Add New Inventory
             </button>
 
-            {/* Add/Edit Inventory Form */}
-            {(showAddInventoryForm || showEditInventoryForm) && (
-              <form onSubmit={showAddInventoryForm ? addInventory : updateInventory} className="bg-gray-50 p-6 rounded-lg shadow-inner mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-700">{showAddInventoryForm ? 'Add New Inventory Item' : `Edit Inventory Item ID: ${editingInventory?.id}`}</h3>
+            {/* Add/Edit Inventory Modal */}
+            <Modal
+              isOpen={showInventoryForm}
+              onClose={() => { setShowInventoryForm(false); setEditingInventory(null); }}
+              title={editingInventory ? `Edit Inventory Item ID: ${editingInventory.id}` : 'Add New Inventory Item'}
+            >
+              <form onSubmit={editingInventory ? updateInventory : addInventory} className="p-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="inventory_name" className="block text-sm font-medium text-gray-700">Name</label>
@@ -689,8 +736,8 @@ function App() {
                       type="text"
                       id="inventory_name"
                       name="name"
-                      value={showAddInventoryForm ? newInventory.name : editingInventory?.name || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.name : newInventory.name}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -700,8 +747,8 @@ function App() {
                     <select
                       id="category_id"
                       name="category_id"
-                      value={showAddInventoryForm ? newInventory.category_id : editingInventory?.category_id || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.category_id : newInventory.category_id}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     >
@@ -717,8 +764,8 @@ function App() {
                       type="number"
                       id="quantity"
                       name="quantity"
-                      value={showAddInventoryForm ? newInventory.quantity : editingInventory?.quantity || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.quantity : newInventory.quantity}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -729,19 +776,19 @@ function App() {
                       type="text"
                       id="unit"
                       name="unit"
-                      value={showAddInventoryForm ? newInventory.unit : editingInventory?.unit || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.unit : newInventory.unit}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
                   </div>
                   <div>
                     <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700">Cost Price</label>
                     <input
-                      type="number" // Ensure type is number
+                      type="number"
                       id="cost_price"
                       name="cost_price"
-                      value={showAddInventoryForm ? newInventory.cost_price : editingInventory?.cost_price || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.cost_price : newInventory.cost_price}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -749,11 +796,11 @@ function App() {
                   <div>
                     <label htmlFor="selling_price" className="block text-sm font-medium text-gray-700">Selling Price</label>
                     <input
-                      type="number" // Ensure type is number
+                      type="number"
                       id="selling_price"
                       name="selling_price"
-                      value={showAddInventoryForm ? newInventory.selling_price : editingInventory?.selling_price || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.selling_price : newInventory.selling_price}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -764,16 +811,16 @@ function App() {
                       type="number"
                       id="reorder_level"
                       name="reorder_level"
-                      value={showAddInventoryForm ? newInventory.reorder_level : editingInventory?.reorder_level || ''}
-                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
+                      value={editingInventory ? editingInventory.reorder_level : newInventory.reorder_level}
+                      onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-3 mt-4">
                   <button
                     type="button"
-                    onClick={() => { setShowAddInventoryForm(false); setShowEditInventoryForm(false); setEditingInventory(null); }}
+                    onClick={() => { setShowInventoryForm(false); setEditingInventory(null); }}
                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
                     Cancel
@@ -782,11 +829,11 @@ function App() {
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
                   >
-                    {showAddInventoryForm ? 'Add Inventory Item' : 'Update Inventory Item'}
+                    {editingInventory ? 'Update Inventory Item' : 'Add Inventory Item'}
                   </button>
                 </div>
               </form>
-            )}
+            </Modal>
 
             {inventory.length > 0 ? (
               <div className="overflow-x-auto">
@@ -816,7 +863,7 @@ function App() {
                         <td className="py-3 px-4 border-b text-sm text-gray-700">${item.selling_price}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{item.reorder_level}</td>
                         <td className="py-3 px-4 border-b text-sm">
-                          <button onClick={() => { setEditingInventory(item); setShowEditInventoryForm(true); setShowAddInventoryForm(false); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                          <button onClick={() => { setEditingInventory(item); setShowInventoryForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
                           <button onClick={() => deleteInventory(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
                         </td>
                       </tr>
@@ -834,6 +881,11 @@ function App() {
       <footer className="text-center text-gray-600 mt-6 text-sm">
         <p>&copy; {new Date().getFullYear()} Dreams Bar & Guesthouse. All rights reserved.</p>
       </footer>
+
+      {/* Toast Notification Display */}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+      )}
     </div>
   );
 }
