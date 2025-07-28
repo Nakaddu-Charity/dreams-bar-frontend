@@ -31,15 +31,37 @@ export default async (req, res) => {
     try {
         switch (req.method) {
             case 'GET':
-                const getResult = await pool.query('SELECT * FROM inventory ORDER BY id ASC');
+                const { search, category_id } = req.query; // Extract search and category_id from query parameters
+                let query = 'SELECT * FROM inventory';
+                const queryParams = [];
+                const conditions = [];
+                let paramIndex = 1;
+
+                if (search) {
+                    // Use ILIKE for case-insensitive search on name
+                    conditions.push(`name ILIKE $${paramIndex++}`);
+                    queryParams.push(`%${search}%`);
+                }
+                if (category_id) {
+                    conditions.push(`category_id = $${paramIndex++}`);
+                    queryParams.push(category_id);
+                }
+
+                if (conditions.length > 0) {
+                    query += ' WHERE ' + conditions.join(' AND ');
+                }
+
+                query += ' ORDER BY id ASC'; // Always order by ID
+
+                const getResult = await pool.query(query, queryParams);
                 res.status(200).json(getResult.rows);
                 break;
 
             case 'POST':
-                const { name, category_id, quantity, unit, cost_price, selling_price, reorder_level } = req.body;
+                const { name, category_id: postCategoryId, quantity, unit, cost_price, selling_price, reorder_level } = req.body;
                 const postResult = await pool.query(
                     'INSERT INTO inventory (name, category_id, quantity, unit, cost_price, selling_price, reorder_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-                    [name, category_id, quantity, unit, cost_price, selling_price, reorder_level]
+                    [name, postCategoryId, quantity, unit, cost_price, selling_price, reorder_level]
                 );
                 res.status(201).json(postResult.rows[0]);
                 break;

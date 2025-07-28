@@ -54,6 +54,10 @@ function App() {
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
   const [roomFilterStatus, setRoomFilterStatus] = useState(''); // 'Available', 'Occupied', 'Maintenance', '' (all)
 
+  // NEW: States for Inventory search and filter
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [inventoryFilterCategory, setInventoryFilterCategory] = useState(''); // Category ID or '' (all)
+
   // Loading state for initial data fetch
   const [isLoading, setIsLoading] = useState(true);
 
@@ -115,9 +119,22 @@ function App() {
     }
   }, [roomSearchTerm, roomFilterStatus, showToast]);
 
-  const fetchInventory = useCallback(async () => {
+  // Modified fetchInventory to accept search and filter parameters
+  const fetchInventory = useCallback(async (search = inventorySearchTerm, category = inventoryFilterCategory) => {
     try {
-      const response = await fetch('/api/inventory');
+      let url = '/api/inventory';
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      if (category) {
+        params.append('category_id', category);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setInventory(data);
@@ -125,7 +142,7 @@ function App() {
       console.error('Failed to fetch inventory:', error);
       showToast('Failed to load inventory items. Please try again.', 'error');
     }
-  }, [showToast]);
+  }, [inventorySearchTerm, inventoryFilterCategory, showToast]); // Dependencies for useCallback
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -174,7 +191,7 @@ function App() {
     const loadAllDataSequentially = async () => {
       setIsLoading(true); // Start loading
       // Fetch core data first
-      await fetchRooms(); // Will use default search/filter states
+      await fetchRooms();
       await fetchInventory();
       await fetchBookings();
       // Then fetch supplementary data
@@ -187,19 +204,19 @@ function App() {
 
 
   // Debounce logic for room search term
-  const debounceTimeoutRef = useRef(null); // Use useRef to hold the timeout ID
+  const roomDebounceTimeoutRef = useRef(null); // Use useRef to hold the timeout ID for rooms
 
   const handleRoomSearchChange = (e) => {
     const value = e.target.value;
     setRoomSearchTerm(value); // Update the state immediately for input display
 
     // Clear previous timeout
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
+    if (roomDebounceTimeoutRef.current) {
+      clearTimeout(roomDebounceTimeoutRef.current);
     }
 
     // Set a new timeout to call fetchRooms after a delay
-    debounceTimeoutRef.current = setTimeout(() => {
+    roomDebounceTimeoutRef.current = setTimeout(() => {
       fetchRooms(value, roomFilterStatus); // Pass the current value and status
     }, 500); // 500ms debounce delay
   };
@@ -210,6 +227,32 @@ function App() {
       fetchRooms(roomSearchTerm, roomFilterStatus);
     }
   }, [roomFilterStatus, fetchRooms, isLoading, roomSearchTerm]);
+
+
+  // NEW: Debounce logic for inventory search term
+  const inventoryDebounceTimeoutRef = useRef(null); // Separate useRef for inventory
+
+  const handleInventorySearchChange = (e) => {
+    const value = e.target.value;
+    setInventorySearchTerm(value); // Update the state immediately for input display
+
+    // Clear previous timeout
+    if (inventoryDebounceTimeoutRef.current) {
+      clearTimeout(inventoryDebounceTimeoutRef.current);
+    }
+
+    // Set a new timeout to call fetchInventory after a delay
+    inventoryDebounceTimeoutRef.current = setTimeout(() => {
+      fetchInventory(value, inventoryFilterCategory); // Pass the current value and category
+    }, 500); // 500ms debounce delay
+  };
+
+  // NEW: Effect to re-fetch inventory when filter category changes (no debounce needed for dropdown)
+  useEffect(() => {
+    if (!isLoading) { // Only refetch if initial load is complete
+      fetchInventory(inventorySearchTerm, inventoryFilterCategory);
+    }
+  }, [inventoryFilterCategory, fetchInventory, isLoading, inventorySearchTerm]);
 
 
   // --- Form Change Handlers ---
@@ -257,7 +300,7 @@ function App() {
       showToast('Room added successfully!', 'success');
       setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' });
       setShowRoomForm(false);
-      fetchRooms(); // Re-fetch all rooms after adding
+      fetchRooms();
     } catch (error) {
       console.error('Failed to add room:', error);
       showToast('Failed to add room. Please try again.', 'error');
@@ -317,7 +360,7 @@ function App() {
       showToast('Room updated successfully!', 'success');
       setEditingRoom(null);
       setShowRoomForm(false);
-      fetchRooms(); // Re-fetch all rooms after updating
+      fetchRooms();
     } catch (error) {
       console.error('Failed to update room:', error);
       showToast('Failed to update room. Please try again.', 'error');
@@ -348,7 +391,6 @@ function App() {
     e.preventDefault();
     if (!editingBooking) return;
     try {
-      // CORRECTED: Ensure ID is included in the URL for PUT request
       const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -382,7 +424,7 @@ function App() {
         }
       } else {
         showToast('Room deleted successfully!', 'success');
-        fetchRooms(); // Re-fetch all rooms after deleting
+        fetchRooms();
       }
     } catch (error) {
       console.error('Failed to delete room:', error);
@@ -794,12 +836,33 @@ function App() {
         {activeTab === 'inventory' && (
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Inventory Management</h2>
-            <button
-              onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
-              className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
-            >
-              + Add New Inventory
-            </button>
+
+            {/* NEW: Search and Filter Controls for Inventory */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+              <button
+                onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
+                className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+              >
+                + Add New Inventory
+              </button>
+              <input
+                type="text"
+                placeholder="Search by Name..."
+                value={inventorySearchTerm}
+                onChange={handleInventorySearchChange}
+                className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+              <select
+                value={inventoryFilterCategory}
+                onChange={(e) => setInventoryFilterCategory(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
 
             {/* Add/Edit Inventory Modal */}
             <Modal
