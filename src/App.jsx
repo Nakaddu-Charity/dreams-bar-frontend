@@ -72,7 +72,7 @@ function App() {
 
 
   // Loading state for initial data fetch (after login)
-  const [isLoading, setIsLoading] = useState(false); // Changed to false, as initial data loads only after login
+  const [isLoading, setIsLoading] = useState(false);
 
   // State for Add/Edit forms visibility
   const [showRoomForm, setShowRoomForm] = useState(false);
@@ -107,6 +107,14 @@ function App() {
     return isNaN(num) ? null : num; // Return null for empty/invalid numbers
   };
 
+  // NEW: RBAC Helper Function
+  const canPerformAction = useCallback((requiredRole) => {
+    if (!currentUser) return false; // Not logged in
+    if (currentUser.role === 'admin') return true; // Admin can do anything
+    return currentUser.role === requiredRole; // Specific role can do specific action
+  }, [currentUser]);
+
+
   // --- Authentication Handlers ---
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
@@ -132,8 +140,7 @@ function App() {
         setCurrentUser(data.user);
         setShowLoginModal(false);
         showToast('Login successful!', 'success');
-        // Immediately fetch data after successful login
-        loadAllDataSequentially();
+        loadAllDataSequentially(); // Fetch data after successful login
       } else {
         showToast(data.message || 'Login failed.', 'error');
       }
@@ -412,6 +419,11 @@ function App() {
   const addRoom = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to add rooms.', 'error');
+      return;
+    }
     try {
       const response = await fetch('/api/rooms', {
         method: 'POST',
@@ -432,6 +444,11 @@ function App() {
   const addInventory = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to add inventory items.', 'error');
+      return;
+    }
     try {
       const response = await fetch('/api/inventory', {
         method: 'POST',
@@ -452,6 +469,11 @@ function App() {
   const addBooking = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can add bookings
+      showToast('You do not have permission to add bookings.', 'error');
+      return;
+    }
     try {
       const response = await fetch('/api/bookings/rooms', {
         method: 'POST',
@@ -474,6 +496,11 @@ function App() {
   const updateRoom = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to update rooms.', 'error');
+      return;
+    }
     if (!editingRoom) return;
     try {
       const response = await fetch(`/api/rooms?id=${editingRoom.id}`, {
@@ -495,6 +522,11 @@ function App() {
   const updateInventory = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to update inventory items.', 'error');
+      return;
+    }
     if (!editingInventory) return;
     try {
       const response = await fetch(`/api/inventory?id=${editingInventory.id}`, {
@@ -516,6 +548,11 @@ function App() {
   const updateBooking = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can update bookings
+      showToast('You do not have permission to update bookings.', 'error');
+      return;
+    }
     if (!editingBooking) return;
     try {
       const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
@@ -538,6 +575,11 @@ function App() {
   // --- Delete Data Functions (DELETE) ---
   const deleteRoom = async (id) => {
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to delete rooms.', 'error');
+      return;
+    }
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
       const response = await fetch(`/api/rooms?id=${id}`, {
@@ -562,6 +604,11 @@ function App() {
 
   const deleteInventory = async (id) => {
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to delete inventory items.', 'error');
+      return;
+    }
     if (!window.confirm('Are you sure you want to delete this inventory item?')) return;
     try {
       const response = await fetch(`/api/inventory?id=${id}`, {
@@ -586,6 +633,11 @@ function App() {
 
   const deleteBooking = async (id) => {
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) { // Only admin can delete bookings
+      showToast('You do not have permission to delete bookings.', 'error');
+      return;
+    }
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
     try {
       const response = await fetch(`/api/bookings/rooms?id=${id}`, {
@@ -876,7 +928,8 @@ function App() {
                 <div className="flex flex-wrap gap-4 mb-4 items-center">
                   <button
                     onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
-                    className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                   >
                     + Add New Booking
                   </button>
@@ -1038,8 +1091,20 @@ function App() {
                             <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.status}</td>
                             <td className="py-3 px-4 border-b text-sm">
-                              <button onClick={() => { setEditingBooking(booking); setShowBookingForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                              <button onClick={() => deleteBooking(booking.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                              <button
+                                onClick={() => { setEditingBooking(booking); setShowBookingForm(true); }}
+                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin') && !canPerformAction('staff')}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteBooking(booking.id)}
+                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Delete
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -1060,7 +1125,8 @@ function App() {
                 <div className="flex flex-wrap gap-4 mb-4 items-center">
                   <button
                     onClick={() => { setShowRoomForm(true); setEditingRoom(null); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
-                    className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canPerformAction('admin')}
                   >
                     + Add New Room
                   </button>
@@ -1187,8 +1253,20 @@ function App() {
                             <td className="py-3 px-4 border-b text-sm text-gray-700">${room.price_per_night}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{room.status}</td>
                             <td className="py-3 px-4 border-b text-sm">
-                              <button onClick={() => { setEditingRoom(room); setShowRoomForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                              <button onClick={() => deleteRoom(room.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                              <button
+                                onClick={() => { setEditingRoom(room); setShowRoomForm(true); }}
+                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteRoom(room.id)}
+                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Delete
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -1209,7 +1287,8 @@ function App() {
                 <div className="flex flex-wrap gap-4 mb-4 items-center">
                   <button
                     onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
-                    className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canPerformAction('admin')}
                   >
                     + Add New Inventory
                   </button>
@@ -1373,8 +1452,20 @@ function App() {
                             <td className="py-3 px-4 border-b text-sm text-gray-700">${item.selling_price}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{item.reorder_level}</td>
                             <td className="py-3 px-4 border-b text-sm">
-                              <button onClick={() => { setEditingInventory(item); setShowInventoryForm(true); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                              <button onClick={() => deleteInventory(item.id)} className="text-red-600 hover:text-red-800">Delete</button>
+                              <button
+                                onClick={() => { setEditingInventory(item); setShowInventoryForm(true); }}
+                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteInventory(item.id)}
+                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Delete
+                              </button>
                             </td>
                           </tr>
                         ))}
