@@ -425,7 +425,7 @@ function App() {
       return;
     }
     try {
-      // NEW: Send role with the request body
+      // Send role with the request body
       const response = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -454,10 +454,11 @@ function App() {
       return;
     }
     try {
+      // NEW: Send role with the request body for Inventory
       const response = await fetch('/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newInventory),
+        body: JSON.stringify({ ...newInventory, role: currentUser.role }), // Include role
       });
       const data = await response.json();
       if (!response.ok) {
@@ -477,7 +478,7 @@ function App() {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
     // Frontend RBAC check
-    if (!canPerformAction('admin') && !canPerformAction('staff')) {
+    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can add bookings
       showToast('You do not have permission to add bookings.', 'error');
       return;
     }
@@ -513,7 +514,7 @@ function App() {
     }
     if (!editingRoom) return;
     try {
-      // NEW: Send role with the request body
+      // Send role with the request body
       const response = await fetch(`/api/rooms?id=${editingRoom.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -543,10 +544,11 @@ function App() {
     }
     if (!editingInventory) return;
     try {
+      // NEW: Send role with the request body for Inventory
       const response = await fetch(`/api/inventory?id=${editingInventory.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingInventory),
+        body: JSON.stringify({ ...editingInventory, role: currentUser.role }), // Include role
       });
       const data = await response.json();
       if (!response.ok) {
@@ -602,7 +604,7 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
-      // NEW: Send role with the query parameters for DELETE
+      // Send role with the query parameters for DELETE
       const response = await fetch(`/api/rooms?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
@@ -633,7 +635,8 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this inventory item?')) return;
     try {
-      const response = await fetch(`/api/inventory?id=${id}`, {
+      // NEW: Send role with the query parameters for Inventory DELETE
+      const response = await fetch(`/api/inventory?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
       const data = await response.json();
