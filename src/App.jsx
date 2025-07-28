@@ -50,6 +50,10 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [clients, setClients] = useState([]);
 
+  // New states for Rooms search and filter
+  const [roomSearchTerm, setRoomSearchTerm] = useState('');
+  const [roomFilterStatus, setRoomFilterStatus] = useState(''); // 'Available', 'Occupied', 'Maintenance', '' (all)
+
   // Loading state for initial data fetch
   const [isLoading, setIsLoading] = useState(true); // New loading state
 
@@ -83,9 +87,22 @@ function App() {
   // --- Fetch Data Functions (READ) ---
   // These functions are called to refresh the data displayed in the tables.
 
-  const fetchRooms = useCallback(async () => {
+  // Modified fetchRooms to accept search and filter parameters
+  const fetchRooms = useCallback(async (search = roomSearchTerm, status = roomFilterStatus) => {
     try {
-      const response = await fetch('/api/rooms');
+      let url = '/api/rooms';
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      if (status) {
+        params.append('status', status);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setRooms(data);
@@ -93,7 +110,7 @@ function App() {
       console.error('Failed to fetch rooms:', error);
       showToast('Failed to load rooms. Please try again.', 'error');
     }
-  }, [showToast]); // Dependency for useCallback
+  }, [roomSearchTerm, roomFilterStatus, showToast]); // Dependencies for useCallback
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -149,12 +166,12 @@ function App() {
     }
   }, [showToast]); // Dependency for useCallback
 
-  // Initial data load on component mount - NOW SEQUENTIAL
+  // Initial data load on component mount - SEQUENTIAL
   useEffect(() => {
     const loadAllDataSequentially = async () => {
       setIsLoading(true); // Start loading
       // Fetch core data first
-      await fetchRooms();
+      await fetchRooms(); // Will use default search/filter states
       await fetchInventory();
       await fetchBookings();
       // Then fetch supplementary data
@@ -166,9 +183,15 @@ function App() {
   }, [fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]);
 
 
-  // --- Form Change Handlers ---
-  // These update the state variables as users type in the forms.
+  // Effect to re-fetch rooms when search term or filter status changes
+  useEffect(() => {
+    if (!isLoading) { // Only refetch if initial load is complete
+      fetchRooms();
+    }
+  }, [roomSearchTerm, roomFilterStatus, fetchRooms, isLoading]);
 
+
+  // --- Form Change Handlers ---
   const handleNewRoomChange = (e) => {
     const { name, value, type } = e.target;
     setNewRoom(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
@@ -201,8 +224,6 @@ function App() {
 
 
   // --- Add Data Functions (CREATE) ---
-  // These send POST requests to the backend.
-
   const addRoom = async (e) => {
     e.preventDefault();
     try {
@@ -262,8 +283,6 @@ function App() {
 
 
   // --- Update Data Functions (UPDATE) ---
-  // These send PUT requests to the backend.
-
   const updateRoom = async (e) => {
     e.preventDefault();
     if (!editingRoom) return;
@@ -326,8 +345,6 @@ function App() {
 
 
   // --- Delete Data Functions (DELETE) ---
-  // These send DELETE requests to the backend.
-
   const deleteRoom = async (id) => {
     if (!window.confirm('Are you sure you want to delete this room?')) return;
     try {
@@ -606,12 +623,33 @@ function App() {
         {activeTab === 'rooms' && (
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Rooms Management</h2>
-            <button
-              onClick={() => { setShowRoomForm(true); setEditingRoom(null); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
-              className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md mb-4 transition-colors"
-            >
-              + Add New Room
-            </button>
+
+            {/* Search and Filter Controls for Rooms */}
+            <div className="flex flex-wrap gap-4 mb-4 items-center">
+              <button
+                onClick={() => { setShowRoomForm(true); setEditingRoom(null); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
+                className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors"
+              >
+                + Add New Room
+              </button>
+              <input
+                type="text"
+                placeholder="Search by Room Number..."
+                value={roomSearchTerm}
+                onChange={(e) => setRoomSearchTerm(e.target.value)}
+                className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+              <select
+                value={roomFilterStatus}
+                onChange={(e) => setRoomFilterStatus(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Occupied">Occupied</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
 
             {/* Add/Edit Room Modal */}
             <Modal

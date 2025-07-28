@@ -31,15 +31,37 @@ export default async (req, res) => {
     try {
         switch (req.method) {
             case 'GET':
-                const getResult = await pool.query('SELECT * FROM rooms ORDER BY id ASC');
+                const { search, status } = req.query; // Extract search and status from query parameters
+                let query = 'SELECT * FROM rooms';
+                const queryParams = [];
+                const conditions = [];
+                let paramIndex = 1;
+
+                if (search) {
+                    // Use ILIKE for case-insensitive search
+                    conditions.push(`room_number ILIKE $${paramIndex++}`);
+                    queryParams.push(`%${search}%`);
+                }
+                if (status) {
+                    conditions.push(`status = $${paramIndex++}`);
+                    queryParams.push(status);
+                }
+
+                if (conditions.length > 0) {
+                    query += ' WHERE ' + conditions.join(' AND ');
+                }
+
+                query += ' ORDER BY id ASC'; // Always order by ID
+
+                const getResult = await pool.query(query, queryParams);
                 res.status(200).json(getResult.rows);
                 break;
 
             case 'POST':
-                const { room_number, type, price_per_night, status } = req.body;
+                const { room_number, type, price_per_night, status: postStatus } = req.body; // Renamed status to postStatus to avoid conflict
                 const postResult = await pool.query(
                     'INSERT INTO rooms (room_number, type, price_per_night, status) VALUES ($1, $2, $3, $4) RETURNING *',
-                    [room_number, type, price_per_night, status]
+                    [room_number, type, price_per_night, postStatus]
                 );
                 res.status(201).json(postResult.rows[0]);
                 break;
