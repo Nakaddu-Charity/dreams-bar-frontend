@@ -131,18 +131,24 @@ function App() {
   };
 
   const handleEditInventoryChange = (e) => {
-    const { name, value } = e.target;
-    setEditingInventory(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    // For number inputs, parse value to float if not empty, otherwise null or 0
+    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
+    setEditingInventory(prev => ({ ...prev, [name]: newValue }));
   };
 
   const handleNewBookingChange = (e) => {
-    const { name, value } = e.target;
-    setNewBooking(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    // For number inputs, parse value to float if not empty, otherwise null or 0
+    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
+    setNewBooking(prev => ({ ...prev, [name]: newValue }));
   };
 
   const handleEditBookingChange = (e) => {
-    const { name, value } = e.target;
-    setEditingBooking(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    // For number inputs, parse value to float if not empty, otherwise null or 0
+    const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
+    setEditingBooking(prev => ({ ...prev, [name]: newValue }));
   };
 
 
@@ -453,11 +459,11 @@ function App() {
                   <div>
                     <label htmlFor="total_price" className="block text-sm font-medium text-gray-700">Total Price</label>
                     <input
-                      type="number"
+                      type="number" // Ensure type is number
                       id="total_price"
                       name="total_price"
                       value={showAddBookingForm ? newBooking.total_price : editingBooking?.total_price || ''}
-                      onChange={handleNewBookingChange}
+                      onChange={showAddBookingForm ? handleNewBookingChange : handleEditBookingChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -644,8 +650,8 @@ function App() {
                       <tr key={room.id} className="hover:bg-gray-50">
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.id}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.room_number}</td>
-                        <td className="py-3 px-4 border-b text-sm text-gray-700">{room.type}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">${room.price_per_night}</td>
+                        <td className="py-3 px-4 border-b text-sm text-gray-700">{room.type}</td>
                         <td className="py-3 px-4 border-b text-sm text-gray-700">{room.status}</td>
                         <td className="py-3 px-4 border-b text-sm">
                           <button onClick={() => { setEditingRoom(room); setShowEditRoomForm(true); setShowAddRoomForm(false); }} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
@@ -712,7 +718,7 @@ function App() {
                       id="quantity"
                       name="quantity"
                       value={showAddInventoryForm ? newInventory.quantity : editingInventory?.quantity || ''}
-                      onChange={handleNewInventoryChange}
+                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -724,18 +730,18 @@ function App() {
                       id="unit"
                       name="unit"
                       value={showAddInventoryForm ? newInventory.unit : editingInventory?.unit || ''}
-                      onChange={handleNewInventoryChange}
+                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
                   </div>
                   <div>
                     <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700">Cost Price</label>
                     <input
-                      type="number"
+                      type="number" // Ensure type is number
                       id="cost_price"
                       name="cost_price"
                       value={showAddInventoryForm ? newInventory.cost_price : editingInventory?.cost_price || ''}
-                      onChange={handleNewInventoryChange}
+                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -743,11 +749,11 @@ function App() {
                   <div>
                     <label htmlFor="selling_price" className="block text-sm font-medium text-gray-700">Selling Price</label>
                     <input
-                      type="number"
+                      type="number" // Ensure type is number
                       id="selling_price"
                       name="selling_price"
                       value={showAddInventoryForm ? newInventory.selling_price : editingInventory?.selling_price || ''}
-                      onChange={handleNewInventoryChange}
+                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
@@ -759,7 +765,7 @@ function App() {
                       id="reorder_level"
                       name="reorder_level"
                       value={showAddInventoryForm ? newInventory.reorder_level : editingInventory?.reorder_level || ''}
-                      onChange={handleNewInventoryChange}
+                      onChange={showAddInventoryForm ? handleNewInventoryChange : handleEditInventoryChange}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                     />
                   </div>
