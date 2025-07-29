@@ -75,7 +75,7 @@ export default async (req, res) => {
                 break;
 
             case 'POST':
-                // NEW: Backend RBAC Check for POST (Create Booking) - Admin or Staff
+                // Backend RBAC Check for POST (Create Booking) - Admin or Staff
                 const postRole = req.body.role; // Assuming role is sent in body
                 if (postRole !== 'admin' && postRole !== 'staff') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators or staff can add bookings.' });
@@ -90,7 +90,7 @@ export default async (req, res) => {
                 break;
 
             case 'PUT':
-                // NEW: Backend RBAC Check for PUT (Update Booking) - Admin or Staff
+                // Backend RBAC Check for PUT (Update Booking) - Admin or Staff
                 const putRole = req.body.role; // Assuming role is sent in body
                 if (putRole !== 'admin' && putRole !== 'staff') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators or staff can update bookings.' });
@@ -110,7 +110,7 @@ export default async (req, res) => {
                 break;
 
             case 'DELETE':
-                // NEW: Backend RBAC Check for DELETE (Delete Booking) - Only Admin
+                // Backend RBAC Check for DELETE (Delete Booking) - Only Admin
                 const deleteRole = req.query.role; // Assuming role is sent in query for DELETE
                 if (deleteRole !== 'admin') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators can delete bookings.' });
@@ -119,7 +119,8 @@ export default async (req, res) => {
                 const { id: deleteId } = req.query;
                 const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1 RETURNING id', [deleteId]);
                 if (deleteResult.rows.length > 0) {
-                    res.status(204).end();
+                    // FIX: Send a JSON response instead of 204 No Content
+                    res.status(200).json({ message: 'Booking deleted successfully.' });
                 } else {
                     res.status(404).json({ message: 'Booking not found' });
                 }

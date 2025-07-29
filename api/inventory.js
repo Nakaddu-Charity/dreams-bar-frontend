@@ -56,7 +56,7 @@ export default async (req, res) => {
                 break;
 
             case 'POST':
-                // NEW: Backend RBAC Check for POST (Create Inventory) - Only Admin
+                // Backend RBAC Check for POST (Create Inventory) - Only Admin
                 const postRole = req.body.role; // Assuming role is sent in body for now
                 if (postRole !== 'admin') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators can add inventory items.' });
@@ -71,7 +71,7 @@ export default async (req, res) => {
                 break;
 
             case 'PUT':
-                // NEW: Backend RBAC Check for PUT (Update Inventory) - Only Admin
+                // Backend RBAC Check for PUT (Update Inventory) - Only Admin
                 const putRole = req.body.role; // Assuming role is sent in body for now
                 if (putRole !== 'admin') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators can update inventory items.' });
@@ -91,7 +91,7 @@ export default async (req, res) => {
                 break;
 
             case 'DELETE':
-                // NEW: Backend RBAC Check for DELETE (Delete Inventory) - Only Admin
+                // Backend RBAC Check for DELETE (Delete Inventory) - Only Admin
                 const deleteRole = req.query.role; // Assuming role is sent in query for DELETE
                 if (deleteRole !== 'admin') {
                     return res.status(403).json({ message: 'Forbidden: Only administrators can delete inventory items.' });
@@ -100,7 +100,8 @@ export default async (req, res) => {
                 const { id: deleteId } = req.query;
                 const deleteResult = await pool.query('DELETE FROM inventory WHERE id = $1 RETURNING id', [deleteId]);
                 if (deleteResult.rows.length > 0) {
-                    res.status(204).end();
+                    // FIX: Send a JSON response instead of 204 No Content
+                    res.status(200).json({ message: 'Inventory item deleted successfully.' });
                 } else {
                     res.status(404).json({ message: 'Item not found' });
                 }
