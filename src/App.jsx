@@ -1247,7 +1247,7 @@ function App() {
           Garden Bookings
         </button>
         <button
-          onClick={() => setActiveTab('menu_items')} {/* NEW: Menu Items Tab */}
+          onClick={() => setActiveTab('menu_items')}
           className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
             activeTab === 'menu_items' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
           }`}
