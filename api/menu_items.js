@@ -38,7 +38,8 @@ export default async (req, res) => {
                     return res.status(403).json({ message: 'Forbidden: Only administrators or staff can view menu items.' });
                 }
 
-                const { search, category_id, is_available } = req.query;
+                // Renamed 'is_available' to 'getIsAvailable' to avoid potential identifier conflict
+                const { search, category_id, is_available: getIsAvailable } = req.query;
                 let query = `
                     SELECT
                         mi.id,
@@ -68,9 +69,9 @@ export default async (req, res) => {
                     conditions.push(`mi.category_id = $${paramIndex++}`);
                     queryParams.push(parseInt(category_id, 10)); // Ensure category_id is parsed as integer
                 }
-                if (is_available !== undefined) {
+                if (getIsAvailable !== undefined) { // Use the renamed variable
                     conditions.push(`mi.is_available = $${paramIndex++}`);
-                    queryParams.push(is_available === 'true'); // Convert string 'true'/'false' to boolean
+                    queryParams.push(getIsAvailable === 'true'); // Convert string 'true'/'false' to boolean
                 }
 
                 if (conditions.length > 0) {
@@ -151,3 +152,4 @@ export default async (req, res) => {
         res.status(500).json({ message: `An internal server error occurred: ${err.message || 'Unknown error'}` });
     }
 };
+
