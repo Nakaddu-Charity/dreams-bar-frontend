@@ -1,18 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css'; // Assuming you have App.css for basic styling
 
+// Import Lucide React icons
+// You would typically install this: npm install lucide-react
+// For a single file, we'll assume it's available or integrate SVGs directly if needed.
+// For this example, we'll use placeholder comments for icons for simplicity,
+// as direct import from 'lucide-react' might not work in a single file immersive without build setup.
+// If you were running this locally, you'd import like:
+// import { Home, Calendar, Utensils, Box, Bed, Users, DollarSign, BarChart, CheckCircle, XCircle } from 'lucide-react';
+
 // --- Reusable Modal Component ---
 const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
   if (!isOpen) return null;
 
-  const maxWidthClass = size === 'lg' ? 'max-w-lg' : size === 'xl' ? 'max-w-xl' : 'max-w-2xl'; // Added xl and 2xl
+  const maxWidthClass = size === 'lg' ? 'max-w-lg' : size === 'xl' ? 'max-w-xl' : size === '2xl' ? 'max-w-2xl' : 'max-w-md';
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white p-6 rounded-lg shadow-xl w-full mx-auto ${maxWidthClass} overflow-y-auto max-h-[90vh]`}>
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 font-sans antialiased animate-fade-in">
+      <div className={`bg-white p-6 rounded-xl shadow-2xl w-full mx-auto ${maxWidthClass} overflow-y-auto max-h-[90vh] transform scale-95 animate-scale-in`}>
+        <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-900 text-3xl font-bold transition-transform transform hover:rotate-90">&times;</button>
         </div>
         <div>{children}</div>
       </div>
@@ -22,7 +30,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
 
 // --- Reusable Toast Notification Component ---
 const Toast = ({ message, type, onClose }) => {
-  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+  const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
   const textColor = 'text-white';
 
   useEffect(() => {
@@ -33,9 +41,9 @@ const Toast = ({ message, type, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg ${bgColor} ${textColor} z-50 transition-opacity duration-300`}>
+    <div className={`fixed top-6 right-6 p-4 rounded-lg shadow-xl ${bgColor} ${textColor} z-50 transition-all duration-300 transform translate-x-0 opacity-100 animate-slide-in-right`}>
       {message}
-      <button onClick={onClose} className="ml-4 font-bold">&times;</button>
+      <button onClick={onClose} className="ml-4 font-bold opacity-80 hover:opacity-100 transition-opacity">&times;</button>
     </div>
   );
 };
@@ -1296,20 +1304,20 @@ function App() {
   // If not logged in, show login/register interface
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans antialiased">
-        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-blue-600 mb-6">Dreams Bar & Guesthouse</h1>
-          <p className="text-gray-700 mb-6">Please log in or register to access the management system.</p>
-          <div className="flex justify-center space-x-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4 font-sans antialiased">
+        <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center transform scale-95 animate-scale-in">
+          <h1 className="text-4xl font-extrabold text-blue-700 mb-6 tracking-tight">Dreams Bar & Guesthouse</h1>
+          <p className="text-gray-700 text-lg mb-8">Your all-in-one hospitality management solution.</p>
+          <div className="flex justify-center space-x-6">
             <button
               onClick={() => setShowLoginModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md shadow-md transition-colors text-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-xl font-semibold transform hover:-translate-y-1"
             >
               Login
             </button>
             <button
               onClick={() => setShowRegisterModal(true)}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-md shadow-md transition-colors text-lg"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-xl font-semibold transform hover:-translate-y-1"
             >
               Register
             </button>
@@ -1320,11 +1328,11 @@ function App() {
         <Modal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
-          title="Login"
+          title="Login to Your Account"
         >
           <form onSubmit={handleLogin} className="p-2">
-            <div className="mb-4">
-              <label htmlFor="login_username" className="block text-sm font-medium text-gray-700">Username</label>
+            <div className="mb-5">
+              <label htmlFor="login_username" className="block text-base font-medium text-gray-700 mb-1">Username</label>
               <input
                 type="text"
                 id="login_username"
@@ -1332,11 +1340,11 @@ function App() {
                 value={loginForm.username}
                 onChange={handleLoginChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
               />
             </div>
-            <div className="mb-6">
-              <label htmlFor="login_password" className="block text-sm font-medium text-gray-700">Password</label>
+            <div className="mb-7">
+              <label htmlFor="login_password" className="block text-base font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password"
                 id="login_password"
@@ -1344,20 +1352,20 @@ function App() {
                 value={loginForm.password}
                 onChange={handleLoginChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
               />
             </div>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-4">
               <button
                 type="button"
                 onClick={() => setShowLoginModal(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
               >
                 Login
               </button>
@@ -1369,11 +1377,11 @@ function App() {
         <Modal
           isOpen={showRegisterModal}
           onClose={() => setShowRegisterModal(false)}
-          title="Register"
+          title="Register New User"
         >
           <form onSubmit={handleRegister} className="p-2">
-            <div className="mb-4">
-              <label htmlFor="register_username" className="block text-sm font-medium text-gray-700">Username</label>
+            <div className="mb-5">
+              <label htmlFor="register_username" className="block text-base font-medium text-gray-700 mb-1">Username</label>
               <input
                 type="text"
                 id="register_username"
@@ -1381,11 +1389,11 @@ function App() {
                 value={registerForm.username}
                 onChange={handleRegisterChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
               />
             </div>
-            <div className="mb-4">
-              <label htmlFor="register_password" className="block text-sm font-medium text-gray-700">Password</label>
+            <div className="mb-5">
+              <label htmlFor="register_password" className="block text-base font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password"
                 id="register_password"
@@ -1393,34 +1401,34 @@ function App() {
                 value={registerForm.password}
                 onChange={handleRegisterChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
               />
             </div>
             {/* Role selection - can be hidden or defaulted for simpler registration */}
-            <div className="mb-6">
-              <label htmlFor="register_role" className="block text-sm font-medium text-gray-700">Role</label>
+            <div className="mb-7">
+              <label htmlFor="register_role" className="block text-base font-medium text-gray-700 mb-1">Role</label>
               <select
                 id="register_role"
                 name="role"
                 value={registerForm.role}
                 onChange={handleRegisterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
               >
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-4">
               <button
                 type="button"
                 onClick={() => setShowRegisterModal(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
               >
                 Register
               </button>
@@ -1438,150 +1446,126 @@ function App() {
 
   // If logged in, show the main application content
   return (
-    <div className="min-h-screen bg-gray-100 p-4 font-sans antialiased">
-      <header className="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Dreams Bar & Guesthouse Management</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 font-sans antialiased">
+      <header className="bg-blue-700 text-white p-5 rounded-xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-center">
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-2 md:mb-0">Dreams Bar & Guesthouse Management</h1>
         <div className="flex items-center space-x-4">
           {currentUser && (
-            <span className="text-lg">Welcome, <span className="font-semibold">{currentUser.username}</span> (<span className="capitalize">{currentUser.role}</span>)</span>
+            <span className="text-lg md:text-xl">Welcome, <span className="font-semibold">{currentUser.username}</span> (<span className="capitalize">{currentUser.role}</span>)</span>
           )}
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition-colors"
+            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg shadow-md transition-colors font-semibold"
           >
             Logout
           </button>
         </div>
       </header>
 
-      <nav className="flex justify-center space-x-4 mb-6 flex-wrap"> {/* Added flex-wrap for responsiveness */}
-        <button
-          onClick={() => setActiveTab('dashboard')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'dashboard' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Dashboard
-        </button>
-        <button
-          onClick={() => setActiveTab('bookings')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'bookings' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Guesthouse Bookings
-        </button>
-        <button
-          onClick={() => setActiveTab('garden_bookings')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'garden_bookings' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Garden Bookings
-        </button>
-        <button
-          onClick={() => setActiveTab('menu_items')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'menu_items' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Restaurant Menu
-        </button>
-        <button
-          onClick={() => setActiveTab('daily_stock')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'daily_stock' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Daily Stock
-        </button>
-        <button
-          onClick={() => setActiveTab('rooms')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'rooms' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Rooms
-        </button>
-        <button
-          onClick={() => setActiveTab('inventory')}
-          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
-            activeTab === 'inventory' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Inventory
-        </button>
+      {/* Navigation Tabs with Icons */}
+      <nav className="flex justify-center space-x-2 md:space-x-4 mb-6 flex-wrap gap-y-2">
+        <TabButton tabName="dashboard" activeTab={activeTab} setActiveTab={setActiveTab} icon="Home">Dashboard</TabButton>
+        <TabButton tabName="bookings" activeTab={activeTab} setActiveTab={setActiveTab} icon="Bed">Guesthouse Bookings</TabButton>
+        <TabButton tabName="garden_bookings" activeTab={activeTab} setActiveTab={setActiveTab} icon="Calendar">Garden Bookings</TabButton>
+        <TabButton tabName="menu_items" activeTab={activeTab} setActiveTab={setActiveTab} icon="Utensils">Restaurant Menu</TabButton>
+        <TabButton tabName="daily_stock" activeTab={activeTab} setActiveTab={setActiveTab} icon="Box">Daily Stock</TabButton>
+        <TabButton tabName="rooms" activeTab={activeTab} setActiveTab={setActiveTab} icon="Users">Rooms</TabButton>
+        <TabButton tabName="inventory" activeTab={activeTab} setActiveTab={setActiveTab} icon="DollarSign">Inventory</TabButton>
       </nav>
 
-      <main className="bg-white p-6 rounded-lg shadow-lg">
+      <main className="bg-white p-6 rounded-xl shadow-lg min-h-[60vh]">
         {isLoading ? (
           <div className="text-center py-10">
-            <div className="text-blue-600 text-xl font-semibold">Loading data...</div>
+            <div className="text-blue-600 text-2xl font-semibold animate-pulse">Loading data...</div>
           </div>
         ) : (
           <>
             {activeTab === 'dashboard' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Overview Dashboard</h2>
+                <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">Overview Dashboard</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {/* Total Revenue Card */}
-                  <div className="bg-purple-50 p-6 rounded-lg shadow-md border-l-4 border-purple-600">
-                    <h3 className="text-xl font-semibold text-purple-800 mb-3">Total Guesthouse Revenue</h3>
-                    <p className="text-gray-700 text-4xl font-bold">${totalRevenue}</p>
-                    <p className="text-gray-500 text-sm mt-1">From all completed guesthouse bookings</p>
-                  </div>
+                  <DashboardCard
+                    title="Total Guesthouse Revenue"
+                    value={`$${totalRevenue}`}
+                    bgColor="bg-purple-50"
+                    borderColor="border-purple-600"
+                    textColor="text-purple-800"
+                    description="From all completed guesthouse bookings"
+                  >
+                    {/* Placeholder for DollarSign icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-dollar-sign text-purple-600 w-8 h-8 mr-3"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  </DashboardCard>
 
-                  {/* Room Status Card (now using roomStatusSummary from reports API) */}
-                  <div className="bg-blue-50 p-6 rounded-lg shadow-md border-l-4 border-blue-600">
-                    <h3 className="text-xl font-semibold text-blue-800 mb-3">Room Status</h3>
+                  {/* Room Status Card */}
+                  <DashboardCard
+                    title="Room Status"
+                    bgColor="bg-blue-50"
+                    borderColor="border-blue-600"
+                    textColor="text-blue-800"
+                  >
+                    {/* Placeholder for Bed icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bed text-blue-600 w-8 h-8 mr-3"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
                     <p className="text-gray-700 text-lg">Total Rooms: <span className="font-bold">{roomStatusSummary.Available + roomStatusSummary.Occupied + roomStatusSummary.Maintenance}</span></p>
-                    <p className="text-green-600 text-lg">Available: <span className="font-bold">{roomStatusSummary.Available}</span></p>
-                    <p className="text-yellow-600 text-lg">Occupied: <span className="font-bold">{roomStatusSummary.Occupied}</span></p>
-                    <p className="text-red-600 text-lg">Maintenance: <span className="font-bold">{roomStatusSummary.Maintenance}</span></p>
-                  </div>
+                    <p className="text-green-600 text-lg flex items-center"><span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Available: <span className="font-bold ml-1">{roomStatusSummary.Available}</span></p>
+                    <p className="text-yellow-600 text-lg flex items-center"><span className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Occupied: <span className="font-bold ml-1">{roomStatusSummary.Occupied}</span></p>
+                    <p className="text-red-600 text-lg flex items-center"><span className="w-3 h-3 rounded-full bg-red-500 mr-2"></span>Maintenance: <span className="font-bold ml-1">{roomStatusSummary.Maintenance}</span></p>
+                  </DashboardCard>
 
                   {/* Room Type Popularity Card */}
-                  <div className="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-600">
-                    <h3 className="text-xl font-semibold text-green-800 mb-3">Guesthouse Room Type Popularity</h3>
+                  <DashboardCard
+                    title="Guesthouse Room Type Popularity"
+                    bgColor="bg-green-50"
+                    borderColor="border-green-600"
+                    textColor="text-green-800"
+                  >
+                    {/* Placeholder for BarChart icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-2 text-green-600 w-8 h-8 mr-3"><line x1="18" x2="18" y1="20" y2="10"></line><line x1="12" x2="12" y1="20" y2="4"></line><line x1="6" x2="6" y1="20" y2="14"></line></svg>
                     {roomTypeBookings.length > 0 ? (
-                      <ul className="list-disc list-inside text-gray-700 text-lg">
+                      <ul className="list-none text-gray-700 text-lg space-y-1">
                         {roomTypeBookings.map((type, index) => (
-                          <li key={index}>{type.room_type}: <span className="font-bold">{type.booking_count} bookings</span></li>
+                          <li key={index} className="flex justify-between"><span>{type.room_type}:</span> <span className="font-bold">{type.booking_count} bookings</span></li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-gray-600 text-sm">No guesthouse room type booking data yet.</p>
+                      <p className="text-gray-600 text-base">No guesthouse room type booking data yet.</p>
                     )}
-                  </div>
+                  </DashboardCard>
 
-                  {/* Inventory Low Stock Card (remains the same) */}
-                  <div className="bg-orange-50 p-6 rounded-lg shadow-md border-l-4 border-orange-600">
-                    <h3 className="text-xl font-semibold text-orange-800 mb-3">Inventory Low Stock</h3>
+                  {/* Inventory Low Stock Card */}
+                  <DashboardCard
+                    title="Inventory Low Stock"
+                    bgColor="bg-orange-50"
+                    borderColor="border-orange-600"
+                    textColor="text-orange-800"
+                  >
+                    {/* Placeholder for AlertCircle icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-circle text-orange-600 w-8 h-8 mr-3"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
                     <p className="text-gray-700 text-lg">Total Inventory Items: <span className="font-bold">{totalInventoryItems}</span></p>
                     <p className="text-red-600 text-lg">Low Stock Items: <span className="font-bold">{lowStockItems.length}</span></p>
                     {lowStockItems.length > 0 ? (
-                      <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
+                      <ul className="list-disc list-inside text-base text-gray-700 mt-2 space-y-0.5">
                         {lowStockItems.slice(0, 5).map(item => ( // Show first 5 low stock items
                           <li key={item.id}>{item.name} ({item.quantity} {item.unit})</li>
                         ))}
-                        {lowStockItems.length > 5 && <li>...and {lowStockItems.length - 5} more</li>}
+                        {lowStockItems.length > 5 && <li className="text-gray-500">...and {lowStockItems.length - 5} more</li>}
                       </ul>
                     ) : (
-                      <p className="text-green-600 text-sm">All inventory levels are good!</p>
+                      <p className="text-green-600 text-base mt-2">All inventory levels are good!</p>
                     )}
-                  </div>
+                  </DashboardCard>
                 </div>
               </div>
             )}
 
             {activeTab === 'bookings' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Guesthouse Bookings Management</h2>
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Guesthouse Bookings Management</h2>
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                   >
                     + Add New Booking
@@ -1591,12 +1575,12 @@ function App() {
                     placeholder="Search by Room/Client Name..."
                     value={bookingSearchTerm}
                     onChange={handleBookingSearchChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   <select
                     value={bookingFilterStatus}
                     onChange={(e) => setBookingFilterStatus(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Statuses</option>
                     <option value="Confirmed">Confirmed</option>
@@ -1614,16 +1598,16 @@ function App() {
                   title={editingBooking ? `Edit Guesthouse Booking ID: ${editingBooking.id}` : 'Add New Guesthouse Booking'}
                 >
                   <form onSubmit={editingBooking ? updateBooking : addBooking} className="p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                       <div>
-                        <label htmlFor="booking_room_id" className="block text-sm font-medium text-gray-700">Room</label>
+                        <label htmlFor="booking_room_id" className="block text-sm font-medium text-gray-700 mb-1">Room</label>
                         <select
                           id="booking_room_id"
                           name="room_id"
                           value={editingBooking ? editingBooking.room_id : newBooking.room_id}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="">Select Room</option>
                           {rooms.map(room => (
@@ -1633,7 +1617,7 @@ function App() {
                       </div>
                       {/* Client Name Input */}
                       <div>
-                        <label htmlFor="client_name" className="block text-sm font-medium text-gray-700">Client Name</label>
+                        <label htmlFor="client_name" className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
                         <input
                           type="text"
                           id="client_name"
@@ -1641,23 +1625,23 @@ function App() {
                           value={editingBooking ? editingBooking.client_name : newBooking.client_name}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       {/* Client Contact Input */}
                       <div>
-                        <label htmlFor="client_contact" className="block text-sm font-medium text-gray-700">Client Contact (Optional)</label>
+                        <label htmlFor="client_contact" className="block text-sm font-medium text-gray-700 mb-1">Client Contact (Optional)</label>
                         <input
                           type="text"
                           id="client_contact"
                           name="client_contact"
                           value={editingBooking ? editingBooking.client_contact : newBooking.client_contact}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="check_in_date" className="block text-sm font-medium text-gray-700">Check-in Date</label>
+                        <label htmlFor="check_in_date" className="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
                         <input
                           type="date"
                           id="check_in_date"
@@ -1665,11 +1649,11 @@ function App() {
                           value={editingBooking ? (editingBooking.check_in_date ? new Date(editingBooking.check_in_date).toISOString().split('T')[0] : '') : newBooking.check_in_date}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="check_out_date" className="block text-sm font-medium text-gray-700">Check-out Date</label>
+                        <label htmlFor="check_out_date" className="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
                         <input
                           type="date"
                           id="check_out_date"
@@ -1677,11 +1661,11 @@ function App() {
                           value={editingBooking ? (editingBooking.check_out_date ? new Date(editingBooking.check_out_date).toISOString().split('T')[0] : '') : newBooking.check_out_date}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="total_price" className="block text-sm font-medium text-gray-700">Total Price</label>
+                        <label htmlFor="total_price" className="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
                         <input
                           type="number"
                           id="total_price"
@@ -1689,18 +1673,18 @@ function App() {
                           value={editingBooking ? (editingBooking.total_price === null ? '' : editingBooking.total_price) : (newBooking.total_price === null ? '' : newBooking.total_price)}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="booking_status" className="block text-sm font-medium text-gray-700">Status</label>
+                        <label htmlFor="booking_status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select
                           id="booking_status"
                           name="status"
                           value={editingBooking ? editingBooking.status : newBooking.status}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="Confirmed">Confirmed</option>
                           <option value="Pending">Pending</option>
@@ -1709,17 +1693,17 @@ function App() {
                         </select>
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => { setShowBookingForm(false); setEditingBooking(null); }}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         {editingBooking ? 'Update Booking' : 'Add Booking'}
                       </button>
@@ -1728,43 +1712,43 @@ function App() {
                 </Modal>
 
                 {bookings.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Room</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Contact</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-in</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-out</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Total Price</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Status</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Room</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Client Name</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Client Contact</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Check-in</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Check-out</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Total Price</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {bookings.map((booking) => (
-                          <tr key={booking.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.room_number} ({booking.room_type})</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_in_date).toLocaleDateString()}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_out_date).toLocaleDateString()}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.status}</td>
-                            <td className="py-3 px-4 border-b text-sm">
+                        {bookings.map((booking, index) => (
+                          <tr key={booking.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.room_number} ({booking.room_type})</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.client_name || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{new Date(booking.check_in_date).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{new Date(booking.check_out_date).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${booking.total_price}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.status}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => { setEditingBooking(booking); setShowBookingForm(true); }}
-                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteBooking(booking.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -1776,7 +1760,7 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No guesthouse bookings found. Add some new bookings!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No guesthouse bookings found. Add some new bookings!</p>
                 )}
               </div>
             )}
@@ -1784,8 +1768,8 @@ function App() {
             {/* Garden Bookings Section */}
             {activeTab === 'garden_bookings' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Garden Bookings Management</h2>
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Garden Bookings Management</h2>
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => {
                       setShowGardenBookingForm(true);
@@ -1795,7 +1779,7 @@ function App() {
                         number_of_guests: 1, purpose: '', total_price: 0.00, status: 'Confirmed'
                       });
                     }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                   >
                     + Add New Garden Booking
@@ -1805,12 +1789,12 @@ function App() {
                     placeholder="Search by Client Name/Purpose..."
                     value={gardenBookingSearchTerm}
                     onChange={handleGardenBookingSearchChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   <select
                     value={gardenBookingFilterStatus}
                     onChange={(e) => setGardenBookingFilterStatus(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Statuses</option>
                     <option value="Confirmed">Confirmed</option>
@@ -1827,9 +1811,9 @@ function App() {
                   title={editingGardenBooking ? `Edit Garden Booking ID: ${editingGardenBooking.id}` : 'Add New Garden Booking'}
                 >
                   <form onSubmit={editingGardenBooking ? updateGardenBooking : addGardenBooking} className="p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                       <div>
-                        <label htmlFor="garden_client_name" className="block text-sm font-medium text-gray-700">Client Name</label>
+                        <label htmlFor="garden_client_name" className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
                         <input
                           type="text"
                           id="garden_client_name"
@@ -1837,22 +1821,22 @@ function App() {
                           value={editingGardenBooking ? editingGardenBooking.client_name : newGardenBooking.client_name}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_client_contact" className="block text-sm font-medium text-gray-700">Client Contact (Optional)</label>
+                        <label htmlFor="garden_client_contact" className="block text-sm font-medium text-gray-700 mb-1">Client Contact (Optional)</label>
                         <input
                           type="text"
                           id="garden_client_contact"
                           name="client_contact"
                           value={editingGardenBooking ? editingGardenBooking.client_contact : newGardenBooking.client_contact}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_booking_date" className="block text-sm font-medium text-gray-700">Booking Date</label>
+                        <label htmlFor="garden_booking_date" className="block text-sm font-medium text-gray-700 mb-1">Booking Date</label>
                         <input
                           type="date"
                           id="garden_booking_date"
@@ -1860,11 +1844,11 @@ function App() {
                           value={editingGardenBooking ? (editingGardenBooking.booking_date ? new Date(editingGardenBooking.booking_date).toISOString().split('T')[0] : '') : newGardenBooking.booking_date}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_start_time" className="block text-sm font-medium text-gray-700">Start Time</label>
+                        <label htmlFor="garden_start_time" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
                         <input
                           type="time"
                           id="garden_start_time"
@@ -1872,11 +1856,11 @@ function App() {
                           value={editingGardenBooking ? editingGardenBooking.start_time : newGardenBooking.start_time}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_end_time" className="block text-sm font-medium text-gray-700">End Time</label>
+                        <label htmlFor="garden_end_time" className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
                         <input
                           type="time"
                           id="garden_end_time"
@@ -1884,11 +1868,11 @@ function App() {
                           value={editingGardenBooking ? editingGardenBooking.end_time : newGardenBooking.end_time}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_number_of_guests" className="block text-sm font-medium text-gray-700">Number of Guests</label>
+                        <label htmlFor="garden_number_of_guests" className="block text-sm font-medium text-gray-700 mb-1">Number of Guests</label>
                         <input
                           type="number"
                           id="garden_number_of_guests"
@@ -1897,22 +1881,22 @@ function App() {
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
                           min="1"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_purpose" className="block text-sm font-medium text-gray-700">Purpose</label>
+                        <label htmlFor="garden_purpose" className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
                         <input
                           type="text"
                           id="garden_purpose"
                           name="purpose"
                           value={editingGardenBooking ? editingGardenBooking.purpose : newGardenBooking.purpose}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_total_price" className="block text-sm font-medium text-gray-700">Total Price</label>
+                        <label htmlFor="garden_total_price" className="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
                         <input
                           type="number"
                           id="garden_total_price"
@@ -1920,18 +1904,18 @@ function App() {
                           value={editingGardenBooking ? (editingGardenBooking.total_price === null ? '' : editingGardenBooking.total_price) : (newGardenBooking.total_price === null ? '' : newGardenBooking.total_price)}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="garden_status" className="block text-sm font-medium text-gray-700">Status</label>
+                        <label htmlFor="garden_status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select
                           id="garden_status"
                           name="status"
                           value={editingGardenBooking ? editingGardenBooking.status : newGardenBooking.status}
                           onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="Confirmed">Confirmed</option>
                           <option value="Pending">Pending</option>
@@ -1940,17 +1924,17 @@ function App() {
                         </select>
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => { setShowGardenBookingForm(false); setEditingGardenBooking(null); }}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         {editingGardenBooking ? 'Update Garden Booking' : 'Add Garden Booking'}
                       </button>
@@ -1959,45 +1943,45 @@ function App() {
                 </Modal>
 
                 {gardenBookings.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Contact</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Date</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Time</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Guests</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Purpose</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Price</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Status</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Client Name</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Contact</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Time</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Guests</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Purpose</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Price</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Status</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {gardenBookings.map((booking) => (
-                          <tr key={booking.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.booking_date).toLocaleDateString()}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.start_time} - {booking.end_time}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.number_of_guests}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.purpose || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.status}</td>
-                            <td className="py-3 px-4 border-b text-sm">
+                        {gardenBookings.map((booking, index) => (
+                          <tr key={booking.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.client_name}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{new Date(booking.booking_date).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.start_time} - {booking.end_time}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.number_of_guests}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.purpose || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${booking.total_price}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{booking.status}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => { setEditingGardenBooking(booking); setShowGardenBookingForm(true); }}
-                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteGardenBooking(booking.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -2009,7 +1993,7 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No garden bookings found. Add some new garden bookings!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No garden bookings found. Add some new garden bookings!</p>
                 )}
               </div>
             )}
@@ -2017,15 +2001,15 @@ function App() {
             {/* Restaurant Menu Section */}
             {activeTab === 'menu_items' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Restaurant Menu Management</h2>
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Restaurant Menu Management</h2>
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => {
                       setShowMenuItemForm(true);
                       setEditingMenuItem(null);
                       setNewMenuItem({ name: '', description: '', price: 0.00, category_id: '', is_available: true });
                     }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin')}
                   >
                     + Add New Menu Item
@@ -2035,12 +2019,12 @@ function App() {
                     placeholder="Search by Name/Description..."
                     value={menuItemSearchTerm}
                     onChange={handleMenuItemSearchChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   <select
                     value={menuItemFilterCategory}
                     onChange={(e) => setMenuItemFilterCategory(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Categories</option>
                     {categories.map(category => (
@@ -2050,7 +2034,7 @@ function App() {
                   <select
                     value={menuItemFilterAvailability}
                     onChange={(e) => setMenuItemFilterAvailability(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Availability</option>
                     <option value="true">Available</option>
@@ -2065,9 +2049,9 @@ function App() {
                   title={editingMenuItem ? `Edit Menu Item ID: ${editingMenuItem.id}` : 'Add New Menu Item'}
                 >
                   <form onSubmit={editingMenuItem ? updateMenuItem : addMenuItem} className="p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                       <div>
-                        <label htmlFor="menu_item_name" className="block text-sm font-medium text-gray-700">Name</label>
+                        <label htmlFor="menu_item_name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                         <input
                           type="text"
                           id="menu_item_name"
@@ -2075,18 +2059,18 @@ function App() {
                           value={editingMenuItem ? editingMenuItem.name : newMenuItem.name}
                           onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="menu_item_category" className="block text-sm font-medium text-gray-700">Category</label>
+                        <label htmlFor="menu_item_category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                         <select
                           id="menu_item_category"
                           name="category_id"
                           value={editingMenuItem ? editingMenuItem.category_id : newMenuItem.category_id}
                           onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="">Select Category</option>
                           {categories.map(category => (
@@ -2095,18 +2079,18 @@ function App() {
                         </select>
                       </div>
                       <div className="md:col-span-2"> {/* Description spans two columns */}
-                        <label htmlFor="menu_item_description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                        <label htmlFor="menu_item_description" className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
                         <textarea
                           id="menu_item_description"
                           name="description"
                           value={editingMenuItem ? editingMenuItem.description : newMenuItem.description}
                           onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
                           rows="2"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         ></textarea>
                       </div>
                       <div>
-                        <label htmlFor="menu_item_price" className="block text-sm font-medium text-gray-700">Price</label>
+                        <label htmlFor="menu_item_price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
                         <input
                           type="number"
                           id="menu_item_price"
@@ -2115,7 +2099,7 @@ function App() {
                           onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
                           required
                           step="0.01"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div className="flex items-center mt-6">
@@ -2125,22 +2109,22 @@ function App() {
                           name="is_available"
                           checked={editingMenuItem ? editingMenuItem.is_available : newMenuItem.is_available}
                           onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
-                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
-                        <label htmlFor="menu_item_is_available" className="ml-2 block text-sm text-gray-900">Is Available</label>
+                        <label htmlFor="menu_item_is_available" className="ml-2 block text-base text-gray-900">Is Available</label>
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => { setShowMenuItemForm(false); setEditingMenuItem(null); }}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         {editingMenuItem ? 'Update Menu Item' : 'Add Menu Item'}
                       </button>
@@ -2149,49 +2133,49 @@ function App() {
                 </Modal>
 
                 {menuItems.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Name</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Description</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Category</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Price</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Available</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Name</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Description</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Category</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Price</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Available</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {menuItems.map((item) => (
-                          <tr key={item.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.name}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.description || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.category_name || 'Uncategorized'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${item.price}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">
+                        {menuItems.map((item, index) => (
+                          <tr key={item.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.name}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.description || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.category_name || 'Uncategorized'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${item.price}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">
                               {item.is_available ? (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                   Yes
                                 </span>
                               ) : (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                   No
                                 </span>
                               )}
                             </td>
-                            <td className="py-3 px-4 border-b text-sm">
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => { setEditingMenuItem(item); setShowMenuItemForm(true); }}
-                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteMenuItem(item.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -2203,7 +2187,7 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No menu items found. Add some new menu items!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No menu items found. Add some new menu items!</p>
                 )}
               </div>
             )}
@@ -2211,14 +2195,14 @@ function App() {
             {/* NEW: Daily Stock Section */}
             {activeTab === 'daily_stock' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Daily Stock Management</h2>
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Daily Stock Management</h2>
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => {
                       setShowDailyStockRecordForm(true);
                       setNewDailyStockRecord({ record_date: new Date().toISOString().split('T')[0], notes: '' });
                     }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                   >
                     + Create New Daily Record
@@ -2228,7 +2212,7 @@ function App() {
                     placeholder="Filter by Date..."
                     value={dailyStockDateFilter}
                     onChange={handleDailyStockDateFilterChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 </div>
 
@@ -2239,8 +2223,8 @@ function App() {
                   title="Create New Daily Stock Record"
                 >
                   <form onSubmit={addDailyStockRecord} className="p-2">
-                    <div className="mb-4">
-                      <label htmlFor="record_date" className="block text-sm font-medium text-gray-700">Record Date</label>
+                    <div className="mb-5">
+                      <label htmlFor="record_date" className="block text-sm font-medium text-gray-700 mb-1">Record Date</label>
                       <input
                         type="date"
                         id="record_date"
@@ -2248,31 +2232,31 @@ function App() {
                         value={newDailyStockRecord.record_date}
                         onChange={handleNewDailyStockRecordChange}
                         required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                       />
                     </div>
-                    <div className="mb-4">
-                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                    <div className="mb-7">
+                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
                       <textarea
                         id="notes"
                         name="notes"
                         value={newDailyStockRecord.notes}
                         onChange={handleNewDailyStockRecordChange}
                         rows="3"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                       ></textarea>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => setShowDailyStockRecordForm(false)}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Create Record
                       </button>
@@ -2282,42 +2266,42 @@ function App() {
 
                 {/* Daily Stock Records Table */}
                 {dailyStockRecords.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Date</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Notes</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Finalized</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">Date</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Notes</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Finalized</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {dailyStockRecords.map((record) => (
-                          <tr key={record.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(record.record_date).toLocaleDateString()}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{record.notes || 'N/A'}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">
+                        {dailyStockRecords.map((record, index) => (
+                          <tr key={record.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{new Date(record.record_date).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{record.notes || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">
                               {record.is_finalized ? (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                   Yes
                                 </span>
                               ) : (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                   No
                                 </span>
                               )}
                             </td>
-                            <td className="py-3 px-4 border-b text-sm">
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => fetchDailyStockRecordDetails(record.id)}
-                                className="text-blue-600 hover:text-blue-800 mr-2"
+                                className="text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors"
                               >
                                 View/Edit Details
                               </button>
                               <button
                                 onClick={() => deleteDailyStockRecord(record.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -2329,7 +2313,7 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No daily stock records found. Create a new record to begin!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No daily stock records found. Create a new record to begin!</p>
                 )}
 
                 {/* Daily Stock Record Details Modal (XL size) */}
@@ -2341,100 +2325,100 @@ function App() {
                 >
                   {currentDailyStockRecord && (
                     <div className="p-2">
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Notes:</label>
+                      <div className="mb-5">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Notes:</label>
                         <textarea
                           value={currentDailyStockRecord.notes || ''}
                           onChange={(e) => setCurrentDailyStockRecord(prev => ({ ...prev, notes: e.target.value }))}
                           onBlur={() => updateDailyStockRecord(currentDailyStockRecord.id, { notes: currentDailyStockRecord.notes })}
                           rows="2"
-                          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                          className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                           disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                         ></textarea>
                       </div>
-                      <div className="mb-4 flex items-center">
+                      <div className="mb-7 flex items-center">
                         <input
                           type="checkbox"
                           id="is_finalized"
                           checked={currentDailyStockRecord.is_finalized}
                           onChange={(e) => updateDailyStockRecord(currentDailyStockRecord.id, { is_finalized: e.target.checked })}
-                          className={`h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                           disabled={!canPerformAction('admin')} // Only admin can finalize
                         />
-                        <label htmlFor="is_finalized" className="ml-2 block text-sm text-gray-900">
+                        <label htmlFor="is_finalized" className="ml-2 block text-base text-gray-900">
                           Finalized (Once finalized, only Admin can edit)
                         </label>
                       </div>
 
-                      <h3 className="text-lg font-semibold mb-3 text-gray-800">Inventory Item Details</h3>
+                      <h3 className="text-xl font-semibold mb-4 text-gray-800">Inventory Item Details</h3>
                       {currentDailyStockItems.length > 0 ? (
-                        <div className="overflow-x-auto max-h-96"> {/* Added max-h for scrollability */}
-                          <table className="min-w-full bg-white border border-gray-200 rounded-lg text-sm">
-                            <thead className="bg-gray-50 sticky top-0"> {/* Sticky header */}
+                        <div className="overflow-x-auto max-h-96 rounded-lg border border-gray-200"> {/* Added max-h for scrollability */}
+                          <table className="min-w-full bg-white">
+                            <thead className="bg-gray-100 sticky top-0"> {/* Sticky header */}
                               <tr>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Item Name (Unit)</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Opening Stock</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Items Received</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Items Taken/Wasted</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Items Sold (Manual)</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Closing Stock (Actual)</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Closing Stock (Calculated)</th>
-                                <th className="py-2 px-3 border-b text-left font-medium text-gray-600">Variance</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Item Name (Unit)</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Opening Stock</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Items Received</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Items Taken/Wasted</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Items Sold (Manual)</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Closing Stock (Actual)</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Closing Stock (Calculated)</th>
+                                <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Variance</th>
                               </tr>
                             </thead>
                             <tbody>
                               {currentDailyStockItems.map((item, index) => (
-                                <tr key={item.id || item.inventory_item_id} className="hover:bg-gray-50">
-                                  <td className="py-2 px-3 border-b text-gray-700 font-semibold">{item.inventory_item_name} ({item.inventory_item_unit})</td>
-                                  <td className="py-2 px-3 border-b">
+                                <tr key={item.id || item.inventory_item_id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                  <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700 font-semibold">{item.inventory_item_name} ({item.inventory_item_unit})</td>
+                                  <td className="py-3 px-4 border-b border-gray-200">
                                     <input
                                       type="number"
                                       value={item.opening_stock}
                                       onChange={(e) => handleDailyStockItemChange(index, 'opening_stock', e.target.value)}
-                                      className={`w-24 p-1 border rounded ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                      className={`w-24 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                       disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 border-b">
+                                  <td className="py-3 px-4 border-b border-gray-200">
                                     <input
                                       type="number"
                                       value={item.items_received}
                                       onChange={(e) => handleDailyStockItemChange(index, 'items_received', e.target.value)}
-                                      className={`w-24 p-1 border rounded ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                      className={`w-24 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                       disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 border-b">
+                                  <td className="py-3 px-4 border-b border-gray-200">
                                     <input
                                       type="number"
                                       value={item.items_taken_wasted}
                                       onChange={(e) => handleDailyStockItemChange(index, 'items_taken_wasted', e.target.value)}
-                                      className={`w-24 p-1 border rounded ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                      className={`w-24 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                       disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 border-b">
+                                  <td className="py-3 px-4 border-b border-gray-200">
                                     <input
                                       type="number"
                                       value={item.items_sold_manual}
                                       onChange={(e) => handleDailyStockItemChange(index, 'items_sold_manual', e.target.value)}
-                                      className={`w-24 p-1 border rounded ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                      className={`w-24 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                       disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 border-b">
+                                  <td className="py-3 px-4 border-b border-gray-200">
                                     <input
                                       type="number"
                                       value={item.closing_stock_actual}
                                       onChange={(e) => handleDailyStockItemChange(index, 'closing_stock_actual', e.target.value)}
-                                      className={`w-24 p-1 border rounded ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                      className={`w-24 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                       disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 border-b text-gray-600 font-medium">
+                                  <td className="py-3 px-4 border-b border-gray-200 text-gray-600 font-medium">
                                     {item.closing_stock_calculated}
                                   </td>
-                                  <td className="py-2 px-3 border-b text-gray-600 font-medium">
+                                  <td className="py-3 px-4 border-b border-gray-200 text-gray-600 font-medium">
                                     {item.variance}
                                   </td>
                                 </tr>
@@ -2443,21 +2427,21 @@ function App() {
                           </table>
                         </div>
                       ) : (
-                        <p className="text-gray-600">No inventory items found for this record.</p>
+                        <p className="text-gray-600 text-lg py-8 text-center">No inventory items found for this record.</p>
                       )}
 
-                      <div className="flex justify-end space-x-3 mt-4">
+                      <div className="flex justify-end space-x-4 mt-6">
                         <button
                           type="button"
                           onClick={() => setShowDailyStockRecordDetailsModal(false)}
-                          className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                          className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                         >
                           Close
                         </button>
                         <button
                           type="button"
                           onClick={() => saveDailyStockItemDetails(currentDailyStockRecord.id)}
-                          className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold ${currentDailyStockRecord.is_finalized && !canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                           disabled={currentDailyStockRecord.is_finalized && !canPerformAction('admin')}
                         >
                           Save Changes
@@ -2471,13 +2455,13 @@ function App() {
 
             {activeTab === 'rooms' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Rooms Management</h2>
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Rooms Management</h2>
 
                 {/* Search and Filter Controls for Rooms */}
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => { setShowRoomForm(true); setEditingRoom(null); setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' }); }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin')}
                   >
                     + Add New Room
@@ -2487,12 +2471,12 @@ function App() {
                     placeholder="Search by Room Number..."
                     value={roomSearchTerm}
                     onChange={handleRoomSearchChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   <select
                     value={roomFilterStatus}
                     onChange={(e) => setRoomFilterStatus(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Statuses</option>
                     <option value="Available">Available</option>
@@ -2508,9 +2492,9 @@ function App() {
                   title={editingRoom ? `Edit Room ID: ${editingRoom.id}` : 'Add New Room'}
                 >
                   <form onSubmit={editingRoom ? updateRoom : addRoom} className="p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                       <div>
-                        <label htmlFor="room_number" className="block text-sm font-medium text-gray-700">Room Number</label>
+                        <label htmlFor="room_number" className="block text-sm font-medium text-gray-700 mb-1">Room Number</label>
                         <input
                           type="text"
                           id="room_number"
@@ -2518,18 +2502,18 @@ function App() {
                           value={editingRoom ? editingRoom.room_number : newRoom.room_number}
                           onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+                        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                         <select
                           id="type"
                           name="type"
                           value={editingRoom ? editingRoom.type : newRoom.type}
                           onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="">Select Type</option>
                           <option value="Standard">Standard</option>
@@ -2538,7 +2522,7 @@ function App() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="price_per_night" className="block text-sm font-medium text-gray-700">Price Per Night</label>
+                        <label htmlFor="price_per_night" className="block text-sm font-medium text-gray-700 mb-1">Price Per Night</label>
                         <input
                           type="number"
                           id="price_per_night"
@@ -2546,18 +2530,18 @@ function App() {
                           value={editingRoom ? (editingRoom.price_per_night === null ? '' : editingRoom.price_per_night) : (newRoom.price_per_night === null ? '' : newRoom.price_per_night)}
                           onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select
                           id="status"
                           name="status"
                           value={editingRoom ? editingRoom.status : newRoom.status}
                           onChange={editingRoom ? handleEditRoomChange : handleNewRoomChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="Available">Available</option>
                           <option value="Occupied">Occupied</option>
@@ -2565,17 +2549,17 @@ function App() {
                         </select>
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => { setShowRoomForm(false); setEditingRoom(null); }}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         {editingRoom ? 'Update Room' : 'Add Room'}
                       </button>
@@ -2584,37 +2568,37 @@ function App() {
                 </Modal>
 
                 {rooms.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Room Number</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Type</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Price/Night</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Status</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Room Number</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Type</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Price/Night</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {rooms.map((room) => (
-                          <tr key={room.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{room.id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{room.room_number}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{room.type}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${room.price_per_night}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{room.status}</td>
-                            <td className="py-3 px-4 border-b text-sm">
+                        {rooms.map((room, index) => (
+                          <tr key={room.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{room.id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{room.room_number}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{room.type}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${room.price_per_night}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{room.status}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => { setEditingRoom(room); setShowRoomForm(true); }}
-                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteRoom(room.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -2626,20 +2610,20 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No rooms found. Add some new rooms!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No rooms found. Add some new rooms!</p>
                 )}
               </div>
             )}
 
             {activeTab === 'inventory' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Inventory Management</h2>
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Inventory Management</h2>
 
                 {/* Search and Filter Controls for Inventory */}
-                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                <div className="flex flex-wrap gap-4 mb-6 items-center">
                   <button
                     onClick={() => { setShowInventoryForm(true); setEditingInventory(null); setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' }); }}
-                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-semibold ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin')}
                   >
                     + Add New Inventory
@@ -2649,12 +2633,12 @@ function App() {
                     placeholder="Search by Name..."
                     value={inventorySearchTerm}
                     onChange={handleInventorySearchChange}
-                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow max-w-xs p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   <select
                     value={inventoryFilterCategory}
                     onChange={(e) => setInventoryFilterCategory(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   >
                     <option value="">All Categories</option>
                     {categories.map(category => (
@@ -2670,9 +2654,9 @@ function App() {
                   title={editingInventory ? `Edit Inventory Item ID: ${editingInventory.id}` : 'Add New Inventory Item'}
                 >
                   <form onSubmit={editingInventory ? updateInventory : addInventory} className="p-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                       <div>
-                        <label htmlFor="inventory_name" className="block text-sm font-medium text-gray-700">Name</label>
+                        <label htmlFor="inventory_name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                         <input
                           type="text"
                           id="inventory_name"
@@ -2680,18 +2664,18 @@ function App() {
                           value={editingInventory ? editingInventory.name : newInventory.name}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">Category</label>
+                        <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                         <select
                           id="category_id"
                           name="category_id"
                           value={editingInventory ? editingInventory.category_id : newInventory.category_id}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         >
                           <option value="">Select Category</option>
                           {categories.map(category => (
@@ -2700,7 +2684,7 @@ function App() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+                        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                         <input
                           type="number"
                           id="quantity"
@@ -2708,22 +2692,22 @@ function App() {
                           value={editingInventory ? (editingInventory.quantity === null ? '' : editingInventory.quantity) : (newInventory.quantity === null ? '' : newInventory.quantity)}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unit</label>
+                        <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                         <input
                           type="text"
                           id="unit"
                           name="unit"
                           value={editingInventory ? editingInventory.unit : newInventory.unit}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700">Cost Price</label>
+                        <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700 mb-1">Cost Price</label>
                         <input
                           type="number"
                           id="cost_price"
@@ -2731,11 +2715,11 @@ function App() {
                           value={editingInventory ? (editingInventory.cost_price === null ? '' : editingInventory.cost_price) : (newInventory.cost_price === null ? '' : newInventory.cost_price)}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="selling_price" className="block text-sm font-medium text-gray-700">Selling Price</label>
+                        <label htmlFor="selling_price" className="block text-sm font-medium text-gray-700 mb-1">Selling Price</label>
                         <input
                           type="number"
                           id="selling_price"
@@ -2743,32 +2727,32 @@ function App() {
                           value={editingInventory ? (editingInventory.selling_price === null ? '' : editingInventory.selling_price) : (newInventory.selling_price === null ? '' : newInventory.selling_price)}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                       <div>
-                        <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700">Reorder Level</label>
+                        <label htmlFor="reorder_level" className="block text-sm font-medium text-gray-700 mb-1">Reorder Level</label>
                         <input
                           type="number"
                           id="reorder_level"
                           name="reorder_level"
                           value={editingInventory ? (editingInventory.reorder_level === null ? '' : editingInventory.reorder_level) : (newInventory.reorder_level === null ? '' : newInventory.reorder_level)}
                           onChange={editingInventory ? handleEditInventoryChange : handleNewInventoryChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base p-3 transition-colors"
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3 mt-4">
+                    <div className="flex justify-end space-x-4 mt-6">
                       <button
                         type="button"
                         onClick={() => { setShowInventoryForm(false); setEditingInventory(null); }}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-200 font-semibold"
                       >
                         {editingInventory ? 'Update Inventory Item' : 'Add Inventory Item'}
                       </button>
@@ -2777,43 +2761,43 @@ function App() {
                 </Modal>
 
                 {inventory.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto rounded-lg shadow-md">
+                    <table className="min-w-full bg-white">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Name</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Category ID</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Quantity</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Unit</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Cost Price</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Selling Price</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Reorder Level</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tl-lg">ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Name</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Category ID</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Quantity</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Unit</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Cost Price</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Selling Price</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Reorder Level</th>
+                          <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 rounded-tr-lg">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {inventory.map((item) => (
-                          <tr key={item.id} className="hover:bg-gray-50">
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.name}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.category_id}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.quantity}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.unit}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${item.cost_price}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">${item.selling_price}</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.reorder_level}</td>
-                            <td className="py-3 px-4 border-b text-sm">
+                        {inventory.map((item, index) => (
+                          <tr key={item.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.name}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.category_id}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.quantity}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.unit}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${item.cost_price}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">${item.selling_price}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm text-gray-700">{item.reorder_level}</td>
+                            <td className="py-3 px-4 border-b border-gray-200 text-sm">
                               <button
                                 onClick={() => { setEditingInventory(item); setShowInventoryForm(true); }}
-                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteInventory(item.id)}
-                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`text-red-600 hover:text-red-800 font-medium transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 disabled={!canPerformAction('admin')}
                               >
                                 Delete
@@ -2825,7 +2809,7 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No inventory items found. Add some new items!</p>
+                  <p className="text-gray-600 text-lg py-8 text-center">No inventory items found. Add some new items!</p>
                 )}
               </div>
             )}
@@ -2833,7 +2817,7 @@ function App() {
         )}
       </main>
 
-      <footer className="text-center text-gray-600 mt-6 text-sm">
+      <footer className="text-center text-gray-600 mt-8 text-base">
         <p>&copy; {new Date().getFullYear()} Dreams Bar & Guesthouse. All rights reserved.</p>
       </footer>
 
@@ -2841,9 +2825,56 @@ function App() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      {/* This is a dummy comment to trigger a new deployment - v2 */}
     </div>
   );
 }
+
+// Helper component for navigation tabs with icons
+const TabButton = ({ tabName, activeTab, setActiveTab, icon }) => {
+  // Simple icon rendering based on string name.
+  // In a real project with lucide-react installed, you'd use:
+  // const IconComponent = { Home, Calendar, Utensils, Box, Bed, Users, DollarSign }[icon];
+  // ... and render <IconComponent className="w-5 h-5 mr-2" />
+  const getIconSvg = (iconName) => {
+    switch (iconName) {
+      case 'Home': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-home mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+      case 'Bed': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bed mr-2"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>;
+      case 'Calendar': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar mr-2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>;
+      case 'Utensils': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-utensils mr-2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2c0-1.1-.9-2-2-2h-4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2z"></path><path d="M19 17v5"></path></svg>;
+      case 'Box': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-box mr-2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>;
+      case 'Users': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+      case 'DollarSign': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-dollar-sign mr-2"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
+      default: return null;
+    }
+  };
+
+  return (
+    <button
+      onClick={() => setActiveTab(tabName)}
+      className={`flex items-center px-5 py-2.5 rounded-lg shadow-md transition-all duration-200 text-lg font-medium transform hover:scale-105 ${
+        activeTab === tabName
+          ? 'bg-blue-700 text-white shadow-lg'
+          : 'bg-white text-blue-700 hover:bg-blue-100'
+      }`}
+    >
+      {getIconSvg(icon)}
+      {children}
+    </button>
+  );
+};
+
+// Helper component for Dashboard Cards
+const DashboardCard = ({ title, value, bgColor, borderColor, textColor, description, children }) => (
+  <div className={`${bgColor} p-6 rounded-xl shadow-lg border-l-4 ${borderColor} flex flex-col justify-between transform transition-transform duration-200 hover:scale-105`}>
+    <div className="flex items-center mb-3">
+      {children} {/* Icon passed as children */}
+      <h3 className={`text-xl font-semibold ${textColor}`}>{title}</h3>
+    </div>
+    {value && <p className="text-gray-900 text-4xl font-bold mb-2">{value}</p>}
+    {description && <p className="text-gray-600 text-sm">{description}</p>}
+    {!value && !description && <div className="text-gray-900">{children.slice(1)}</div>} {/* Render content if no value/description */}
+  </div>
+);
+
 
 export default App;
