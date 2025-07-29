@@ -35,27 +35,26 @@ export default async (req, res) => {
                     SELECT
                         b.id,
                         b.room_id,
-                        b.client_id,
                         b.check_in_date,
                         b.check_out_date,
                         b.total_price,
                         b.status,
+                        b.client_name,      -- NEW: Select client_name directly
+                        b.client_contact,   -- NEW: Select client_contact directly
                         r.room_number,
-                        r.type AS room_type,
-                        c.name AS client_name
+                        r.type AS room_type
                     FROM
                         bookings b
                     JOIN
                         rooms r ON b.room_id = r.id
-                    JOIN
-                        clients c ON b.client_id = c.id
                 `;
                 const queryParams = [];
                 const conditions = [];
                 let paramIndex = 1;
 
                 if (search) {
-                    conditions.push(`(r.room_number ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex})`);
+                    // NEW: Search by client_name or room_number
+                    conditions.push(`(b.client_name ILIKE $${paramIndex} OR r.room_number ILIKE $${paramIndex})`);
                     queryParams.push(`%${search}%`);
                     paramIndex++;
                 }
@@ -81,10 +80,11 @@ export default async (req, res) => {
                     return res.status(403).json({ message: 'Forbidden: Only administrators or staff can add bookings.' });
                 }
 
-                const { room_id, client_id, check_in_date, check_out_date, total_price, status: postStatus } = req.body;
+                // NEW: Destructure client_name and client_contact
+                const { room_id, check_in_date, check_out_date, total_price, status: postStatus, client_name, client_contact } = req.body;
                 const postResult = await pool.query(
-                    'INSERT INTO bookings (room_id, client_id, check_in_date, check_out_date, total_price, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-                    [room_id, client_id, check_in_date, check_out_date, total_price, postStatus]
+                    'INSERT INTO bookings (room_id, check_in_date, check_out_date, total_price, status, client_name, client_contact) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+                    [room_id, check_in_date, check_out_date, total_price, postStatus, client_name, client_contact]
                 );
                 res.status(201).json(postResult.rows[0]);
                 break;
@@ -97,10 +97,11 @@ export default async (req, res) => {
                 }
 
                 const { id: putId } = req.query;
-                const { room_id: putRoomId, client_id: putClientId, check_in_date: putCheckInDate, check_out_date: putCheckOutDate, total_price: putTotalPrice, status: putStatus } = req.body;
+                // NEW: Destructure client_name and client_contact
+                const { room_id: putRoomId, check_in_date: putCheckInDate, check_out_date: putCheckOutDate, total_price: putTotalPrice, status: putStatus, client_name: putClientName, client_contact: putClientContact } = req.body;
                 const putResult = await pool.query(
-                    'UPDATE bookings SET room_id = $1, client_id = $2, check_in_date = $3, check_out_date = $4, total_price = $5, status = $6 WHERE id = $7 RETURNING *',
-                    [putRoomId, putClientId, putCheckInDate, putCheckOutDate, putTotalPrice, putStatus, putId]
+                    'UPDATE bookings SET room_id = $1, check_in_date = $2, check_out_date = $3, total_price = $4, status = $5, client_name = $6, client_contact = $7 WHERE id = $8 RETURNING *',
+                    [putRoomId, putCheckInDate, putCheckOutDate, putTotalPrice, putStatus, putClientName, putClientContact, putId]
                 );
                 if (putResult.rows.length > 0) {
                     res.status(200).json(putResult.rows[0]);
@@ -119,7 +120,6 @@ export default async (req, res) => {
                 const { id: deleteId } = req.query;
                 const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1 RETURNING id', [deleteId]);
                 if (deleteResult.rows.length > 0) {
-                    // FIX: Send a JSON response instead of 204 No Content
                     res.status(200).json({ message: 'Booking deleted successfully.' });
                 } else {
                     res.status(404).json({ message: 'Booking not found' });

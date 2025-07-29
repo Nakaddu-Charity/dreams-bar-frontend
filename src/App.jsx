@@ -56,7 +56,7 @@ function App() {
   const [inventory, setInventory] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [clients, setClients] = useState([]);
+  // REMOVED: const [clients, setClients] = useState([]); // Clients state no longer needed
 
   // States for Rooms search and filter
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
@@ -87,7 +87,8 @@ function App() {
   // State for new item data (used by Add forms)
   const [newRoom, setNewRoom] = useState({ room_number: '', type: '', price_per_night: '', status: 'Available' });
   const [newInventory, setNewInventory] = useState({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
-  const [newBooking, setNewBooking] = useState({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
+  // UPDATED: NewBooking state now includes client_name and client_contact
+  const [newBooking, setNewBooking] = useState({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
 
   // State for Toast Notifications
   const [toast, setToast] = useState(null); // { message: '...', type: 'success' | 'error' }
@@ -182,7 +183,7 @@ function App() {
     setInventory([]);
     setBookings([]);
     setCategories([]);
-    setClients([]);
+    // Removed: setClients([]);
     setActiveTab('dashboard'); // Reset tab
   };
 
@@ -279,21 +280,7 @@ function App() {
     }
   }, [showToast, isLoggedIn]);
 
-  const fetchClients = useCallback(async () => {
-    if (!isLoggedIn) return; // Only fetch if logged in
-    try {
-      const response = await fetch('/api/clients');
-      if (!response.ok) {
-        console.warn('Clients endpoint not found or failed to fetch for dropdown.');
-        return [];
-      }
-      const data = await response.json();
-      setClients(data);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      showToast('Failed to load clients. Please try again.', 'error');
-    }
-  }, [showToast, isLoggedIn]);
+  // REMOVED: fetchClients function is no longer needed
 
   // Initial data load on component mount - SEQUENTIAL (only if logged in)
   const loadAllDataSequentially = useCallback(async () => {
@@ -305,9 +292,9 @@ function App() {
     await fetchBookings();
     // Then fetch supplementary data
     await fetchCategories();
-    await fetchClients();
+    // Removed: await fetchClients();
     setIsLoading(false); // End loading
-  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchClients]);
+  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchCategories]); // Removed fetchClients from dependencies
 
   // Effect to trigger initial data load if isLoggedIn changes to true
   useEffect(() => {
@@ -404,11 +391,13 @@ function App() {
     setEditingInventory(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
+  // UPDATED: handleNewBookingChange to include client_name and client_contact
   const handleNewBookingChange = (e) => {
     const { name, value, type } = e.target;
     setNewBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
+  // UPDATED: handleEditBookingChange to include client_name and client_contact
   const handleEditBookingChange = (e) => {
     const { name, value, type } = e.target;
     setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
@@ -483,18 +472,19 @@ function App() {
       return;
     }
     try {
-      // NEW: Send role with the request body for Booking
+      // UPDATED: Send client_name and client_contact instead of client_id
       const response = await fetch('/api/bookings/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newBooking, role: currentUser.role }), // Include role
+        body: JSON.stringify({ ...newBooking, role: currentUser.role }), // Include role and new client fields
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
       showToast('Booking added successfully!', 'success');
-      setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
+      // UPDATED: Reset newBooking state to include new client fields
+      setNewBooking({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
       setShowBookingForm(false);
       fetchBookings();
     } catch (error) {
@@ -575,11 +565,11 @@ function App() {
     }
     if (!editingBooking) return;
     try {
-      // NEW: Send role with the request body for Booking
+      // UPDATED: Send client_name and client_contact instead of client_id
       const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...editingBooking, role: currentUser.role }), // Include role
+        body: JSON.stringify({ ...editingBooking, role: currentUser.role }), // Include role and new client fields
       });
       const data = await response.json();
       if (!response.ok) {
@@ -666,7 +656,7 @@ function App() {
     }
     if (!window.confirm('Are you sure you want to delete this booking?')) return;
     try {
-      // NEW: Send role with the query parameters for Booking DELETE
+      // Send role with the query parameters for Booking DELETE
       const response = await fetch(`/api/bookings/rooms?id=${id}&role=${currentUser.role}`, { // Include role
         method: 'DELETE',
       });
@@ -953,7 +943,7 @@ function App() {
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bookings Management</h2>
                 <div className="flex flex-wrap gap-4 mb-4 items-center">
                   <button
-                    onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_id: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
+                    onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
                     className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={!canPerformAction('admin') && !canPerformAction('staff')}
                   >
@@ -961,7 +951,7 @@ function App() {
                   </button>
                   <input
                     type="text"
-                    placeholder="Search by Room/Client..."
+                    placeholder="Search by Room/Client Name..."
                     value={bookingSearchTerm}
                     onChange={handleBookingSearchChange}
                     className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -1004,21 +994,30 @@ function App() {
                           ))}
                         </select>
                       </div>
+                      {/* NEW: Client Name Input */}
                       <div>
-                        <label htmlFor="booking_client_id" className="block text-sm font-medium text-gray-700">Client</label>
-                        <select
-                          id="booking_client_id"
-                          name="client_id"
-                          value={editingBooking ? editingBooking.client_id : newBooking.client_id}
+                        <label htmlFor="client_name" className="block text-sm font-medium text-gray-700">Client Name</label>
+                        <input
+                          type="text"
+                          id="client_name"
+                          name="client_name"
+                          value={editingBooking ? editingBooking.client_name : newBooking.client_name}
                           onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
                           required
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-                        >
-                          <option value="">Select Client</option>
-                          {clients.map(client => (
-                            <option key={client.id} value={client.id}>{client.name}</option>
-                          ))}
-                        </select>
+                        />
+                      </div>
+                      {/* NEW: Client Contact Input */}
+                      <div>
+                        <label htmlFor="client_contact" className="block text-sm font-medium text-gray-700">Client Contact (Optional)</label>
+                        <input
+                          type="text"
+                          id="client_contact"
+                          name="client_contact"
+                          value={editingBooking ? editingBooking.client_contact : newBooking.client_contact}
+                          onChange={editingBooking ? handleEditBookingChange : handleNewBookingChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
                       </div>
                       <div>
                         <label htmlFor="check_in_date" className="block text-sm font-medium text-gray-700">Check-in Date</label>
@@ -1098,7 +1097,8 @@ function App() {
                         <tr>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Room</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th> {/* UPDATED */}
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Contact</th> {/* NEW */}
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-in</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-out</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Total Price</th>
@@ -1111,7 +1111,8 @@ function App() {
                           <tr key={booking.id} className="hover:bg-gray-50">
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.id}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.room_number} ({booking.room_type})</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name}</td> {/* UPDATED */}
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td> {/* NEW */}
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_in_date).toLocaleDateString()}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_out_date).toLocaleDateString()}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
