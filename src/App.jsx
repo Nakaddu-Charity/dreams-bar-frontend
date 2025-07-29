@@ -1488,7 +1488,7 @@ function App() {
           Restaurant Menu
         </button>
         <button
-          onClick={() => setActiveTab('daily_stock')} {/* NEW: Daily Stock Tab */}
+          onClick={() => setActiveTab('daily_stock')}
           className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
             activeTab === 'daily_stock' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
           }`}
@@ -2841,7 +2841,7 @@ function App() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      {/* This is a dummy comment to trigger a new deployment */}
+      {/* This is a dummy comment to trigger a new deployment - v2 */}
     </div>
   );
 }
