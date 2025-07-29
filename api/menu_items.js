@@ -21,6 +21,7 @@ export default async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Content-Type', 'application/json'); // Ensure JSON content type is always set
 
     // Handle OPTIONS method for CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -33,6 +34,7 @@ export default async (req, res) => {
                 // RBAC Check for GET (Read Menu Items) - Admin or Staff
                 const getRole = req.query.role;
                 if (getRole !== 'admin' && getRole !== 'staff') {
+                    console.error('Forbidden access attempt to menu_items GET by role:', getRole);
                     return res.status(403).json({ message: 'Forbidden: Only administrators or staff can view menu items.' });
                 }
 
@@ -64,7 +66,7 @@ export default async (req, res) => {
                 }
                 if (category_id) {
                     conditions.push(`mi.category_id = $${paramIndex++}`);
-                    queryParams.push(category_id);
+                    queryParams.push(parseInt(category_id, 10)); // Ensure category_id is parsed as integer
                 }
                 if (is_available !== undefined) {
                     conditions.push(`mi.is_available = $${paramIndex++}`);
@@ -85,13 +87,14 @@ export default async (req, res) => {
                 // RBAC Check for POST (Create Menu Item) - Only Admin
                 const postRole = req.body.role;
                 if (postRole !== 'admin') {
+                    console.error('Forbidden access attempt to menu_items POST by role:', postRole);
                     return res.status(403).json({ message: 'Forbidden: Only administrators can add menu items.' });
                 }
 
                 const { name, description, price, category_id: postCategoryId, is_available } = req.body;
                 const postResult = await pool.query(
                     'INSERT INTO menu_items (name, description, price, category_id, is_available) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-                    [name, description, price, postCategoryId, is_available]
+                    [name, description, price, postCategoryId ? parseInt(postCategoryId, 10) : null, is_available] // Parse category_id to int, handle null
                 );
                 res.status(201).json(postResult.rows[0]);
                 break;
@@ -100,6 +103,7 @@ export default async (req, res) => {
                 // RBAC Check for PUT (Update Menu Item) - Only Admin
                 const putRole = req.body.role;
                 if (putRole !== 'admin') {
+                    console.error('Forbidden access attempt to menu_items PUT by role:', putRole);
                     return res.status(403).json({ message: 'Forbidden: Only administrators can update menu items.' });
                 }
 
@@ -107,7 +111,7 @@ export default async (req, res) => {
                 const { name: putName, description: putDescription, price: putPrice, category_id: putCategoryId, is_available: putIsAvailable } = req.body;
                 const putResult = await pool.query(
                     'UPDATE menu_items SET name = $1, description = $2, price = $3, category_id = $4, is_available = $5 WHERE id = $6 RETURNING *',
-                    [putName, putDescription, putPrice, putCategoryId, putIsAvailable, putId]
+                    [putName, putDescription, putPrice, putCategoryId ? parseInt(putCategoryId, 10) : null, putIsAvailable, putId] // Parse category_id to int, handle null
                 );
                 if (putResult.rows.length > 0) {
                     res.status(200).json(putResult.rows[0]);
@@ -120,6 +124,7 @@ export default async (req, res) => {
                 // RBAC Check for DELETE (Delete Menu Item) - Only Admin
                 const deleteRole = req.query.role;
                 if (deleteRole !== 'admin') {
+                    console.error('Forbidden access attempt to menu_items DELETE by role:', deleteRole);
                     return res.status(403).json({ message: 'Forbidden: Only administrators can delete menu items.' });
                 }
 
@@ -133,15 +138,16 @@ export default async (req, res) => {
                 break;
 
             default:
+                console.warn(`Method ${req.method} Not Allowed for /api/menu_items`);
                 res.status(405).json({ message: 'Method Not Allowed' });
                 break;
         }
     } catch (err) {
-        console.error('Error in menu_items API:', err);
+        console.error('Unhandled error in menu_items API:', err); // Log the full error
         // Handle unique constraint violation for name
         if (err.code === '23505' && err.constraint === 'menu_items_name_key') {
             return res.status(409).json({ message: 'A menu item with this name already exists.' });
         }
-        res.status(500).json({ message: 'An error occurred while processing your request.' });
+        res.status(500).json({ message: `An internal server error occurred: ${err.message || 'Unknown error'}` });
     }
 };
