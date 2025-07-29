@@ -56,8 +56,9 @@ function App() {
   const [inventory, setInventory] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [gardenBookings, setGardenBookings] = useState([]); // NEW: State for Garden Bookings
 
-  // NEW: States for Report Data
+  // States for Report Data
   const [totalRevenue, setTotalRevenue] = useState('0.00');
   const [roomTypeBookings, setRoomTypeBookings] = useState([]);
   const [roomStatusSummary, setRoomStatusSummary] = useState({ Available: 0, Occupied: 0, Maintenance: 0 });
@@ -75,6 +76,10 @@ function App() {
   const [bookingSearchTerm, setBookingSearchTerm] = useState('');
   const [bookingFilterStatus, setBookingFilterStatus] = useState('');
 
+  // NEW: States for Garden Bookings search and filter
+  const [gardenBookingSearchTerm, setGardenBookingSearchTerm] = useState('');
+  const [gardenBookingFilterStatus, setGardenBookingFilterStatus] = useState('');
+
 
   // Loading state for initial data fetch (after login)
   const [isLoading, setIsLoading] = useState(false);
@@ -83,16 +88,23 @@ function App() {
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showGardenBookingForm, setShowGardenBookingForm] = useState(false); // NEW: State for Garden Booking form visibility
 
   // State for item being edited (null for add, object for edit)
   const [editingRoom, setEditingRoom] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
+  const [editingGardenBooking, setEditingGardenBooking] = useState(null); // NEW: State for Garden Booking being edited
 
   // State for new item data (used by Add forms)
   const [newRoom, setNewRoom] = useState({ room_number: '', type: '', price_per_night: '', status: 'Available' });
   const [newInventory, setNewInventory] = useState({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
   const [newBooking, setNewBooking] = useState({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
+  // NEW: State for new Garden Booking data
+  const [newGardenBooking, setNewGardenBooking] = useState({
+    client_name: '', client_contact: '', booking_date: '', start_time: '', end_time: '',
+    number_of_guests: 1, purpose: '', total_price: 0.00, status: 'Confirmed'
+  });
 
   // State for Toast Notifications
   const [toast, setToast] = useState(null); // { message: '...', type: 'success' | 'error' }
@@ -187,7 +199,7 @@ function App() {
     setInventory([]);
     setBookings([]);
     setCategories([]);
-    // NEW: Clear report states on logout
+    setGardenBookings([]); // NEW: Clear garden bookings state
     setTotalRevenue('0.00');
     setRoomTypeBookings([]);
     setRoomStatusSummary({ Available: 0, Occupied: 0, Maintenance: 0 });
@@ -288,7 +300,36 @@ function App() {
     }
   }, [showToast, isLoggedIn]);
 
-  // NEW: Fetch Reports Function
+  // NEW: Fetch Garden Bookings Function
+  const fetchGardenBookings = useCallback(async (search = gardenBookingSearchTerm, status = gardenBookingFilterStatus) => {
+    if (!isLoggedIn || !currentUser) return; // Only fetch if logged in and user role is available
+    try {
+      let url = `/api/garden_bookings?role=${currentUser.role}`; // Pass role for RBAC
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      if (status) {
+        params.append('status', status);
+      }
+      if (params.toString()) {
+        url += `&${params.toString()}`; // Append with & because role is already a param
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      setGardenBookings(data);
+    } catch (error) {
+      console.error('Failed to fetch garden bookings:', error);
+      showToast(`Failed to load garden bookings: ${error.message}`, 'error');
+    }
+  }, [isLoggedIn, currentUser, gardenBookingSearchTerm, gardenBookingFilterStatus, showToast]);
+
+
+  // Fetch Reports Function
   const fetchReports = useCallback(async () => {
     if (!isLoggedIn || !currentUser) return; // Only fetch if logged in and user role is available
     try {
@@ -315,12 +356,12 @@ function App() {
     await fetchRooms();
     await fetchInventory();
     await fetchBookings();
+    await fetchGardenBookings(); // NEW: Fetch garden bookings
     // Then fetch supplementary data
     await fetchCategories();
-    // NEW: Fetch reports
     await fetchReports();
     setIsLoading(false); // End loading
-  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchReports]);
+  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchGardenBookings, fetchCategories, fetchReports]);
 
   // Effect to trigger initial data load if isLoggedIn changes to true
   useEffect(() => {
@@ -396,6 +437,28 @@ function App() {
   }, [bookingFilterStatus, fetchBookings, isLoading, bookingSearchTerm, isLoggedIn]);
 
 
+  // NEW: Debounce logic for garden booking search term
+  const gardenBookingDebounceTimeoutRef = useRef(null);
+
+  const handleGardenBookingSearchChange = (e) => {
+    const value = e.target.value;
+    setGardenBookingSearchTerm(value);
+
+    if (gardenBookingDebounceTimeoutRef.current) {
+      clearTimeout(gardenBookingDebounceTimeoutRef.current);
+    }
+    gardenBookingDebounceTimeoutRef.current = setTimeout(() => {
+      fetchGardenBookings(value, gardenBookingFilterStatus);
+    }, 500);
+  };
+
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      fetchGardenBookings(gardenBookingSearchTerm, gardenBookingFilterStatus);
+    }
+  }, [gardenBookingFilterStatus, fetchGardenBookings, isLoading, gardenBookingSearchTerm, isLoggedIn]);
+
+
   // --- Form Change Handlers (CRUD) ---
   const handleNewRoomChange = (e) => {
     const { name, value, type } = e.target;
@@ -425,6 +488,18 @@ function App() {
   const handleEditBookingChange = (e) => {
     const { name, value, type } = e.target;
     setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
+  };
+
+  // NEW: Handle New Garden Booking Change
+  const handleNewGardenBookingChange = (e) => {
+    const { name, value, type } = e.target;
+    setNewGardenBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
+  };
+
+  // NEW: Handle Edit Garden Booking Change
+  const handleEditGardenBookingChange = (e) => {
+    const { name, value, type } = e.target;
+    setEditingGardenBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
 
@@ -517,6 +592,39 @@ function App() {
     } catch (error) {
       console.error('Failed to add booking:', error);
       showToast(`Failed to add booking: ${error.message}`, 'error');
+    }
+  };
+
+  // NEW: Add Garden Booking
+  const addGardenBooking = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin') && !canPerformAction('staff')) { // Both admin and staff can add garden bookings
+      showToast('You do not have permission to add garden bookings.', 'error');
+      return;
+    }
+    try {
+      const response = await fetch('/api/garden_bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newGardenBooking, role: currentUser.role }), // Include role
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      showToast('Garden booking added successfully!', 'success');
+      setNewGardenBooking({
+        client_name: '', client_contact: '', booking_date: '', start_time: '', end_time: '',
+        number_of_guests: 1, purpose: '', total_price: 0.00, status: 'Confirmed'
+      });
+      setShowGardenBookingForm(false);
+      fetchGardenBookings();
+      // fetchReports(); // Consider if garden bookings affect main reports (e.g., total revenue if you integrate it)
+    } catch (error) {
+      console.error('Failed to add garden booking:', error);
+      showToast(`Failed to add garden booking: ${error.message}`, 'error');
     }
   };
 
@@ -615,6 +723,37 @@ function App() {
     }
   };
 
+  // NEW: Update Garden Booking
+  const updateGardenBooking = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin') && !canPerformAction('staff')) {
+      showToast('You do not have permission to update garden bookings.', 'error');
+      return;
+    }
+    if (!editingGardenBooking) return;
+    try {
+      const response = await fetch(`/api/garden_bookings?id=${editingGardenBooking.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editingGardenBooking, role: currentUser.role }), // Include role
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      showToast('Garden booking updated successfully!', 'success');
+      setEditingGardenBooking(null);
+      setShowGardenBookingForm(false);
+      fetchGardenBookings();
+      // fetchReports(); // Consider if garden bookings affect main reports
+    } catch (error) {
+      console.error('Failed to update garden booking:', error);
+      showToast(`Failed to update garden booking: ${error.message}`, 'error');
+    }
+  };
+
 
   // --- Delete Data Functions (DELETE) ---
   const deleteRoom = async (id) => {
@@ -709,14 +848,39 @@ function App() {
     }
   };
 
+  // NEW: Delete Garden Booking
+  const deleteGardenBooking = async (id) => {
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to delete garden bookings.', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete this garden booking?')) return;
+    try {
+      const response = await fetch(`/api/garden_bookings?id=${id}&role=${currentUser.role}`, { // Include role
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(data.message || 'Forbidden: You do not have permission.');
+        }
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      } else {
+        showToast('Garden booking deleted successfully!', 'success');
+        fetchGardenBookings();
+        // fetchReports(); // Consider if garden bookings affect main reports
+      }
+    } catch (error) {
+      console.error('Failed to delete garden booking:', error);
+      showToast(`Failed to delete garden booking: ${error.message}`, 'error');
+    }
+  };
+
 
   // --- Dashboard Calculations (now using reports API for some) ---
-  // const totalRooms = isLoggedIn ? rooms.length : 0; // Now derived from roomStatusSummary
-  // const availableRooms = isLoggedIn ? rooms.filter(room => room.status === 'Available').length : 0;
-  // const occupiedRooms = isLoggedIn ? rooms.filter(room => room.status === 'Occupied').length : 0;
-  // const maintenanceRooms = isLoggedIn ? rooms.filter(room => room.status === 'Maintenance').length : 0;
-
-  const totalBookings = isLoggedIn ? bookings.length : 0;
+  const totalBookingsCount = isLoggedIn ? bookings.length : 0; // Still using local state for this
   const confirmedBookings = isLoggedIn ? bookings.filter(booking => booking.status === 'Confirmed').length : 0;
   const pendingBookings = isLoggedIn ? bookings.filter(booking => booking.status === 'Pending').length : 0;
   const cancelledBookings = isLoggedIn ? bookings.filter(booking => booking.status === 'Cancelled').length : 0;
@@ -902,7 +1066,15 @@ function App() {
             activeTab === 'bookings' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
           }`}
         >
-          Bookings
+          Guesthouse Bookings
+        </button>
+        <button
+          onClick={() => setActiveTab('garden_bookings')} // NEW: Garden Bookings Tab
+          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
+            activeTab === 'garden_bookings' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
+          }`}
+        >
+          Garden Bookings
         </button>
         <button
           onClick={() => setActiveTab('rooms')}
@@ -936,9 +1108,9 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Total Revenue Card */}
                   <div className="bg-purple-50 p-6 rounded-lg shadow-md border-l-4 border-purple-600">
-                    <h3 className="text-xl font-semibold text-purple-800 mb-3">Total Revenue</h3>
+                    <h3 className="text-xl font-semibold text-purple-800 mb-3">Total Guesthouse Revenue</h3>
                     <p className="text-gray-700 text-4xl font-bold">${totalRevenue}</p>
-                    <p className="text-gray-500 text-sm mt-1">From all completed bookings</p>
+                    <p className="text-gray-500 text-sm mt-1">From all completed guesthouse bookings</p>
                   </div>
 
                   {/* Room Status Card (now using roomStatusSummary from reports API) */}
@@ -952,7 +1124,7 @@ function App() {
 
                   {/* Room Type Popularity Card */}
                   <div className="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-600">
-                    <h3 className="text-xl font-semibold text-green-800 mb-3">Room Type Popularity</h3>
+                    <h3 className="text-xl font-semibold text-green-800 mb-3">Guesthouse Room Type Popularity</h3>
                     {roomTypeBookings.length > 0 ? (
                       <ul className="list-disc list-inside text-gray-700 text-lg">
                         {roomTypeBookings.map((type, index) => (
@@ -960,7 +1132,7 @@ function App() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-gray-600 text-sm">No room type booking data yet.</p>
+                      <p className="text-gray-600 text-sm">No guesthouse room type booking data yet.</p>
                     )}
                   </div>
 
@@ -986,7 +1158,7 @@ function App() {
 
             {activeTab === 'bookings' && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bookings Management</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Guesthouse Bookings Management</h2>
                 <div className="flex flex-wrap gap-4 mb-4 items-center">
                   <button
                     onClick={() => { setShowBookingForm(true); setEditingBooking(null); setNewBooking({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' }); }}
@@ -1020,7 +1192,7 @@ function App() {
                 <Modal
                   isOpen={showBookingForm}
                   onClose={() => { setShowBookingForm(false); setEditingBooking(null); }}
-                  title={editingBooking ? `Edit Booking ID: ${editingBooking.id}` : 'Add New Booking'}
+                  title={editingBooking ? `Edit Guesthouse Booking ID: ${editingBooking.id}` : 'Add New Guesthouse Booking'}
                 >
                   <form onSubmit={editingBooking ? updateBooking : addBooking} className="p-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1185,7 +1357,240 @@ function App() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600">No bookings found. Add some new bookings!</p>
+                  <p className="text-gray-600">No guesthouse bookings found. Add some new bookings!</p>
+                )}
+              </div>
+            )}
+
+            {/* NEW: Garden Bookings Section */}
+            {activeTab === 'garden_bookings' && (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Garden Bookings Management</h2>
+                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                  <button
+                    onClick={() => {
+                      setShowGardenBookingForm(true);
+                      setEditingGardenBooking(null);
+                      setNewGardenBooking({
+                        client_name: '', client_contact: '', booking_date: '', start_time: '', end_time: '',
+                        number_of_guests: 1, purpose: '', total_price: 0.00, status: 'Confirmed'
+                      });
+                    }}
+                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canPerformAction('admin') && !canPerformAction('staff')}
+                  >
+                    + Add New Garden Booking
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="Search by Client Name/Purpose..."
+                    value={gardenBookingSearchTerm}
+                    onChange={handleGardenBookingSearchChange}
+                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <select
+                    value={gardenBookingFilterStatus}
+                    onChange={(e) => setGardenBookingFilterStatus(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                {/* Add/Edit Garden Booking Modal */}
+                <Modal
+                  isOpen={showGardenBookingForm}
+                  onClose={() => { setShowGardenBookingForm(false); setEditingGardenBooking(null); }}
+                  title={editingGardenBooking ? `Edit Garden Booking ID: ${editingGardenBooking.id}` : 'Add New Garden Booking'}
+                >
+                  <form onSubmit={editingGardenBooking ? updateGardenBooking : addGardenBooking} className="p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label htmlFor="garden_client_name" className="block text-sm font-medium text-gray-700">Client Name</label>
+                        <input
+                          type="text"
+                          id="garden_client_name"
+                          name="client_name"
+                          value={editingGardenBooking ? editingGardenBooking.client_name : newGardenBooking.client_name}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_client_contact" className="block text-sm font-medium text-gray-700">Client Contact (Optional)</label>
+                        <input
+                          type="text"
+                          id="garden_client_contact"
+                          name="client_contact"
+                          value={editingGardenBooking ? editingGardenBooking.client_contact : newGardenBooking.client_contact}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_booking_date" className="block text-sm font-medium text-gray-700">Booking Date</label>
+                        <input
+                          type="date"
+                          id="garden_booking_date"
+                          name="booking_date"
+                          value={editingGardenBooking ? (editingGardenBooking.booking_date ? new Date(editingGardenBooking.booking_date).toISOString().split('T')[0] : '') : newGardenBooking.booking_date}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_start_time" className="block text-sm font-medium text-gray-700">Start Time</label>
+                        <input
+                          type="time"
+                          id="garden_start_time"
+                          name="start_time"
+                          value={editingGardenBooking ? editingGardenBooking.start_time : newGardenBooking.start_time}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_end_time" className="block text-sm font-medium text-gray-700">End Time</label>
+                        <input
+                          type="time"
+                          id="garden_end_time"
+                          name="end_time"
+                          value={editingGardenBooking ? editingGardenBooking.end_time : newGardenBooking.end_time}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_number_of_guests" className="block text-sm font-medium text-gray-700">Number of Guests</label>
+                        <input
+                          type="number"
+                          id="garden_number_of_guests"
+                          name="number_of_guests"
+                          value={editingGardenBooking ? editingGardenBooking.number_of_guests : newGardenBooking.number_of_guests}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          min="1"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_purpose" className="block text-sm font-medium text-gray-700">Purpose</label>
+                        <input
+                          type="text"
+                          id="garden_purpose"
+                          name="purpose"
+                          value={editingGardenBooking ? editingGardenBooking.purpose : newGardenBooking.purpose}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_total_price" className="block text-sm font-medium text-gray-700">Total Price</label>
+                        <input
+                          type="number"
+                          id="garden_total_price"
+                          name="total_price"
+                          value={editingGardenBooking ? (editingGardenBooking.total_price === null ? '' : editingGardenBooking.total_price) : (newGardenBooking.total_price === null ? '' : newGardenBooking.total_price)}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="garden_status" className="block text-sm font-medium text-gray-700">Status</label>
+                        <select
+                          id="garden_status"
+                          name="status"
+                          value={editingGardenBooking ? editingGardenBooking.status : newGardenBooking.status}
+                          onChange={editingGardenBooking ? handleEditGardenBookingChange : handleNewGardenBookingChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        >
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => { setShowGardenBookingForm(false); setEditingGardenBooking(null); }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                      >
+                        {editingGardenBooking ? 'Update Garden Booking' : 'Add Garden Booking'}
+                      </button>
+                    </div>
+                  </form>
+                </Modal>
+
+                {gardenBookings.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Contact</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Date</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Time</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Guests</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Purpose</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Price</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Status</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gardenBookings.map((booking) => (
+                          <tr key={booking.id} className="hover:bg-gray-50">
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.id}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.booking_date).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.start_time} - {booking.end_time}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.number_of_guests}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.purpose || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.status}</td>
+                            <td className="py-3 px-4 border-b text-sm">
+                              <button
+                                onClick={() => { setEditingGardenBooking(booking); setShowGardenBookingForm(true); }}
+                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') && !canPerformAction('staff') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin') && !canPerformAction('staff')}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteGardenBooking(booking.id)}
+                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-600">No garden bookings found. Add some new garden bookings!</p>
                 )}
               </div>
             )}
