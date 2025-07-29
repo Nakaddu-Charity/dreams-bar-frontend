@@ -1,39 +1,44 @@
-/* App Layout */
-.app-container {
-  display: flex;
-  height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 240px;
-  background-color: #1f2d3d;
-  color: #fff;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-/* Sidebar items (inside Sidebar.js) */
-.sidebar a {
-  color: #fff;
-  text-decoration: none;
-  margin: 12px 0;
-  padding: 10px 15px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.sidebar a:hover {
-  background-color: #3c4f65;
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
-/* Main Content */
-.main-content {
-  flex-grow: 1;
-  padding: 30px;
-  overflow-y: auto;
+.card {
+  padding: 2em;
 }
+
+.read-the-docs {
+  color: #888;
+}
+
+
