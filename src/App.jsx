@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css'; // Assuming you have App.css for basic styling
 
-// Import Lucide React icons
-// You would typically install this: npm install lucide-react
-// For a single file, we'll assume it's available or integrate SVGs directly if needed.
-// For this example, we'll use placeholder comments for icons for simplicity,
-// as direct import from 'lucide-react' might not work in a single file immersive without build setup.
-// If you were running this locally, you'd import like:
-// import { Home, Calendar, Utensils, Box, Bed, Users, DollarSign, BarChart, CheckCircle, XCircle } from 'lucide-react';
+// Define SVG icons as components for reusability
+const HomeIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+const BedIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>;
+const CalendarIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>;
+const UtensilsIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2c0-1.1-.9-2-2-2h-4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2z"></path><path d="M19 17v5"></path></svg>;
+const BoxIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>;
+const UsersIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+const DollarSignIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
+const BarChartIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" x2="18" y1="20" y2="10"></line><line x1="12" x2="12" y1="20" y2="4"></line><line x1="6" x2="6" y1="20" y2="14"></line></svg>;
+const AlertCircleIcon = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>;
+
 
 // --- Reusable Modal Component ---
 const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
@@ -1464,13 +1468,13 @@ function App() {
 
       {/* Navigation Tabs with Icons */}
       <nav className="flex justify-center space-x-2 md:space-x-4 mb-6 flex-wrap gap-y-2">
-        <TabButton tabName="dashboard" activeTab={activeTab} setActiveTab={setActiveTab} icon="Home">Dashboard</TabButton>
-        <TabButton tabName="bookings" activeTab={activeTab} setActiveTab={setActiveTab} icon="Bed">Guesthouse Bookings</TabButton>
-        <TabButton tabName="garden_bookings" activeTab={activeTab} setActiveTab={setActiveTab} icon="Calendar">Garden Bookings</TabButton>
-        <TabButton tabName="menu_items" activeTab={activeTab} setActiveTab={setActiveTab} icon="Utensils">Restaurant Menu</TabButton>
-        <TabButton tabName="daily_stock" activeTab={activeTab} setActiveTab={setActiveTab} icon="Box">Daily Stock</TabButton>
-        <TabButton tabName="rooms" activeTab={activeTab} setActiveTab={setActiveTab} icon="Users">Rooms</TabButton>
-        <TabButton tabName="inventory" activeTab={activeTab} setActiveTab={setActiveTab} icon="DollarSign">Inventory</TabButton>
+        <TabButton tabName="dashboard" activeTab={activeTab} setActiveTab={setActiveTab} Icon={HomeIcon}>Dashboard</TabButton>
+        <TabButton tabName="bookings" activeTab={activeTab} setActiveTab={setActiveTab} Icon={BedIcon}>Guesthouse Bookings</TabButton>
+        <TabButton tabName="garden_bookings" activeTab={activeTab} setActiveTab={setActiveTab} Icon={CalendarIcon}>Garden Bookings</TabButton>
+        <TabButton tabName="menu_items" activeTab={activeTab} setActiveTab={setActiveTab} Icon={UtensilsIcon}>Restaurant Menu</TabButton>
+        <TabButton tabName="daily_stock" activeTab={activeTab} setActiveTab={setActiveTab} Icon={BoxIcon}>Daily Stock</TabButton>
+        <TabButton tabName="rooms" activeTab={activeTab} setActiveTab={setActiveTab} Icon={UsersIcon}>Rooms</TabButton>
+        <TabButton tabName="inventory" activeTab={activeTab} setActiveTab={setActiveTab} Icon={DollarSignIcon}>Inventory</TabButton>
       </nav>
 
       <main className="bg-white p-6 rounded-xl shadow-lg min-h-[60vh]">
@@ -1493,10 +1497,8 @@ function App() {
                     borderColor="border-purple-600"
                     textColor="text-purple-800"
                     description="From all completed guesthouse bookings"
-                  >
-                    {/* Placeholder for DollarSign icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-dollar-sign text-purple-600 w-8 h-8 mr-3"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                  </DashboardCard>
+                    Icon={DollarSignIcon}
+                  />
 
                   {/* Room Status Card */}
                   <DashboardCard
@@ -1504,9 +1506,8 @@ function App() {
                     bgColor="bg-blue-50"
                     borderColor="border-blue-600"
                     textColor="text-blue-800"
+                    Icon={BedIcon}
                   >
-                    {/* Placeholder for Bed icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bed text-blue-600 w-8 h-8 mr-3"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
                     <p className="text-gray-700 text-lg">Total Rooms: <span className="font-bold">{roomStatusSummary.Available + roomStatusSummary.Occupied + roomStatusSummary.Maintenance}</span></p>
                     <p className="text-green-600 text-lg flex items-center"><span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Available: <span className="font-bold ml-1">{roomStatusSummary.Available}</span></p>
                     <p className="text-yellow-600 text-lg flex items-center"><span className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Occupied: <span className="font-bold ml-1">{roomStatusSummary.Occupied}</span></p>
@@ -1519,9 +1520,8 @@ function App() {
                     bgColor="bg-green-50"
                     borderColor="border-green-600"
                     textColor="text-green-800"
+                    Icon={BarChartIcon}
                   >
-                    {/* Placeholder for BarChart icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-2 text-green-600 w-8 h-8 mr-3"><line x1="18" x2="18" y1="20" y2="10"></line><line x1="12" x2="12" y1="20" y2="4"></line><line x1="6" x2="6" y1="20" y2="14"></line></svg>
                     {roomTypeBookings.length > 0 ? (
                       <ul className="list-none text-gray-700 text-lg space-y-1">
                         {roomTypeBookings.map((type, index) => (
@@ -1539,9 +1539,8 @@ function App() {
                     bgColor="bg-orange-50"
                     borderColor="border-orange-600"
                     textColor="text-orange-800"
+                    Icon={AlertCircleIcon}
                   >
-                    {/* Placeholder for AlertCircle icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-circle text-orange-600 w-8 h-8 mr-3"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
                     <p className="text-gray-700 text-lg">Total Inventory Items: <span className="font-bold">{totalInventoryItems}</span></p>
                     <p className="text-red-600 text-lg">Low Stock Items: <span className="font-bold">{lowStockItems.length}</span></p>
                     {lowStockItems.length > 0 ? (
@@ -2830,24 +2829,7 @@ function App() {
 }
 
 // Helper component for navigation tabs with icons
-const TabButton = ({ tabName, activeTab, setActiveTab, icon }) => {
-  // Simple icon rendering based on string name.
-  // In a real project with lucide-react installed, you'd use:
-  // const IconComponent = { Home, Calendar, Utensils, Box, Bed, Users, DollarSign }[icon];
-  // ... and render <IconComponent className="w-5 h-5 mr-2" />
-  const getIconSvg = (iconName) => {
-    switch (iconName) {
-      case 'Home': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-home mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
-      case 'Bed': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bed mr-2"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>;
-      case 'Calendar': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar mr-2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>;
-      case 'Utensils': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-utensils mr-2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2c0-1.1-.9-2-2-2h-4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2z"></path><path d="M19 17v5"></path></svg>;
-      case 'Box': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-box mr-2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>;
-      case 'Users': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
-      case 'DollarSign': return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-dollar-sign mr-2"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
-      default: return null;
-    }
-  };
-
+const TabButton = ({ tabName, activeTab, setActiveTab, Icon, children }) => {
   return (
     <button
       onClick={() => setActiveTab(tabName)}
@@ -2857,22 +2839,22 @@ const TabButton = ({ tabName, activeTab, setActiveTab, icon }) => {
           : 'bg-white text-blue-700 hover:bg-blue-100'
       }`}
     >
-      {getIconSvg(icon)}
+      {Icon && <Icon className="w-5 h-5 mr-2" />}
       {children}
     </button>
   );
 };
 
 // Helper component for Dashboard Cards
-const DashboardCard = ({ title, value, bgColor, borderColor, textColor, description, children }) => (
+const DashboardCard = ({ title, value, bgColor, borderColor, textColor, description, Icon, children }) => (
   <div className={`${bgColor} p-6 rounded-xl shadow-lg border-l-4 ${borderColor} flex flex-col justify-between transform transition-transform duration-200 hover:scale-105`}>
     <div className="flex items-center mb-3">
-      {children} {/* Icon passed as children */}
+      {Icon && <Icon className={`${textColor.replace('text-', 'text-')} w-8 h-8 mr-3`} />} {/* Render icon if provided */}
       <h3 className={`text-xl font-semibold ${textColor}`}>{title}</h3>
     </div>
     {value && <p className="text-gray-900 text-4xl font-bold mb-2">{value}</p>}
     {description && <p className="text-gray-600 text-sm">{description}</p>}
-    {!value && !description && <div className="text-gray-900">{children.slice(1)}</div>} {/* Render content if no value/description */}
+    {children} {/* Render all other children directly */}
   </div>
 );
 
