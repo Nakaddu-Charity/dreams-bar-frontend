@@ -56,7 +56,8 @@ function App() {
   const [inventory, setInventory] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [gardenBookings, setGardenBookings] = useState([]); // NEW: State for Garden Bookings
+  const [gardenBookings, setGardenBookings] = useState([]);
+  const [menuItems, setMenuItems] = useState([]); // NEW: State for Menu Items
 
   // States for Report Data
   const [totalRevenue, setTotalRevenue] = useState('0.00');
@@ -76,9 +77,14 @@ function App() {
   const [bookingSearchTerm, setBookingSearchTerm] = useState('');
   const [bookingFilterStatus, setBookingFilterStatus] = useState('');
 
-  // NEW: States for Garden Bookings search and filter
+  // States for Garden Bookings search and filter
   const [gardenBookingSearchTerm, setGardenBookingSearchTerm] = useState('');
   const [gardenBookingFilterStatus, setGardenBookingFilterStatus] = useState('');
+
+  // NEW: States for Menu Items search and filter
+  const [menuItemSearchTerm, setMenuItemSearchTerm] = useState('');
+  const [menuItemFilterCategory, setMenuItemFilterCategory] = useState('');
+  const [menuItemFilterAvailability, setMenuItemFilterAvailability] = useState(''); // 'true', 'false', '' (all)
 
 
   // Loading state for initial data fetch (after login)
@@ -88,22 +94,27 @@ function App() {
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [showGardenBookingForm, setShowGardenBookingForm] = useState(false); // NEW: State for Garden Booking form visibility
+  const [showGardenBookingForm, setShowGardenBookingForm] = useState(false);
+  const [showMenuItemForm, setShowMenuItemForm] = useState(false); // NEW: State for Menu Item form visibility
 
   // State for item being edited (null for add, object for edit)
   const [editingRoom, setEditingRoom] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
-  const [editingGardenBooking, setEditingGardenBooking] = useState(null); // NEW: State for Garden Booking being edited
+  const [editingGardenBooking, setEditingGardenBooking] = useState(null);
+  const [editingMenuItem, setEditingMenuItem] = useState(null); // NEW: State for Menu Item being edited
 
   // State for new item data (used by Add forms)
   const [newRoom, setNewRoom] = useState({ room_number: '', type: '', price_per_night: '', status: 'Available' });
   const [newInventory, setNewInventory] = useState({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
   const [newBooking, setNewBooking] = useState({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
-  // NEW: State for new Garden Booking data
   const [newGardenBooking, setNewGardenBooking] = useState({
     client_name: '', client_contact: '', booking_date: '', start_time: '', end_time: '',
     number_of_guests: 1, purpose: '', total_price: 0.00, status: 'Confirmed'
+  });
+  // NEW: State for new Menu Item data
+  const [newMenuItem, setNewMenuItem] = useState({
+    name: '', description: '', price: 0.00, category_id: '', is_available: true
   });
 
   // State for Toast Notifications
@@ -199,7 +210,8 @@ function App() {
     setInventory([]);
     setBookings([]);
     setCategories([]);
-    setGardenBookings([]); // NEW: Clear garden bookings state
+    setGardenBookings([]);
+    setMenuItems([]); // NEW: Clear menu items state
     setTotalRevenue('0.00');
     setRoomTypeBookings([]);
     setRoomStatusSummary({ Available: 0, Occupied: 0, Maintenance: 0 });
@@ -300,7 +312,7 @@ function App() {
     }
   }, [showToast, isLoggedIn]);
 
-  // NEW: Fetch Garden Bookings Function
+  // Fetch Garden Bookings Function
   const fetchGardenBookings = useCallback(async (search = gardenBookingSearchTerm, status = gardenBookingFilterStatus) => {
     if (!isLoggedIn || !currentUser) return; // Only fetch if logged in and user role is available
     try {
@@ -327,6 +339,37 @@ function App() {
       showToast(`Failed to load garden bookings: ${error.message}`, 'error');
     }
   }, [isLoggedIn, currentUser, gardenBookingSearchTerm, gardenBookingFilterStatus, showToast]);
+
+  // NEW: Fetch Menu Items Function
+  const fetchMenuItems = useCallback(async (search = menuItemSearchTerm, category = menuItemFilterCategory, available = menuItemFilterAvailability) => {
+    if (!isLoggedIn || !currentUser) return; // Only fetch if logged in and user role is available
+    try {
+      let url = `/api/menu_items?role=${currentUser.role}`; // Pass role for RBAC
+      const params = new URLSearchParams();
+      if (search) {
+        params.append('search', search);
+      }
+      if (category) {
+        params.append('category_id', category);
+      }
+      if (available !== '') { // Only append if a specific availability is selected
+        params.append('is_available', available);
+      }
+      if (params.toString()) {
+        url += `&${params.toString()}`; // Append with & because role is already a param
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      setMenuItems(data);
+    } catch (error) {
+      console.error('Failed to fetch menu items:', error);
+      showToast(`Failed to load menu items: ${error.message}`, 'error');
+    }
+  }, [isLoggedIn, currentUser, menuItemSearchTerm, menuItemFilterCategory, menuItemFilterAvailability, showToast]);
 
 
   // Fetch Reports Function
@@ -356,12 +399,13 @@ function App() {
     await fetchRooms();
     await fetchInventory();
     await fetchBookings();
-    await fetchGardenBookings(); // NEW: Fetch garden bookings
+    await fetchGardenBookings();
+    await fetchMenuItems(); // NEW: Fetch menu items
     // Then fetch supplementary data
     await fetchCategories();
     await fetchReports();
     setIsLoading(false); // End loading
-  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchGardenBookings, fetchCategories, fetchReports]);
+  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchGardenBookings, fetchMenuItems, fetchCategories, fetchReports]);
 
   // Effect to trigger initial data load if isLoggedIn changes to true
   useEffect(() => {
@@ -437,7 +481,7 @@ function App() {
   }, [bookingFilterStatus, fetchBookings, isLoading, bookingSearchTerm, isLoggedIn]);
 
 
-  // NEW: Debounce logic for garden booking search term
+  // Debounce logic for garden booking search term
   const gardenBookingDebounceTimeoutRef = useRef(null);
 
   const handleGardenBookingSearchChange = (e) => {
@@ -457,6 +501,28 @@ function App() {
       fetchGardenBookings(gardenBookingSearchTerm, gardenBookingFilterStatus);
     }
   }, [gardenBookingFilterStatus, fetchGardenBookings, isLoading, gardenBookingSearchTerm, isLoggedIn]);
+
+
+  // NEW: Debounce logic for menu item search term
+  const menuItemDebounceTimeoutRef = useRef(null);
+
+  const handleMenuItemSearchChange = (e) => {
+    const value = e.target.value;
+    setMenuItemSearchTerm(value);
+
+    if (menuItemDebounceTimeoutRef.current) {
+      clearTimeout(menuItemDebounceTimeoutRef.current);
+    }
+    menuItemDebounceTimeoutRef.current = setTimeout(() => {
+      fetchMenuItems(value, menuItemFilterCategory, menuItemFilterAvailability);
+    }, 500);
+  };
+
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      fetchMenuItems(menuItemSearchTerm, menuItemFilterCategory, menuItemFilterAvailability);
+    }
+  }, [menuItemFilterCategory, menuItemFilterAvailability, fetchMenuItems, isLoading, menuItemSearchTerm, isLoggedIn]);
 
 
   // --- Form Change Handlers (CRUD) ---
@@ -490,16 +556,32 @@ function App() {
     setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
-  // NEW: Handle New Garden Booking Change
   const handleNewGardenBookingChange = (e) => {
     const { name, value, type } = e.target;
     setNewGardenBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
-  // NEW: Handle Edit Garden Booking Change
   const handleEditGardenBookingChange = (e) => {
     const { name, value, type } = e.target;
     setEditingGardenBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
+  };
+
+  // NEW: Handle New Menu Item Change
+  const handleNewMenuItemChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewMenuItem(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseNumericInput(value) : (type === 'checkbox' ? checked : value)
+    }));
+  };
+
+  // NEW: Handle Edit Menu Item Change
+  const handleEditMenuItemChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditingMenuItem(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseNumericInput(value) : (type === 'checkbox' ? checked : value)
+    }));
   };
 
 
@@ -595,7 +677,7 @@ function App() {
     }
   };
 
-  // NEW: Add Garden Booking
+  // Add Garden Booking
   const addGardenBooking = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
@@ -625,6 +707,35 @@ function App() {
     } catch (error) {
       console.error('Failed to add garden booking:', error);
       showToast(`Failed to add garden booking: ${error.message}`, 'error');
+    }
+  };
+
+  // NEW: Add Menu Item
+  const addMenuItem = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to add menu items.', 'error');
+      return;
+    }
+    try {
+      const response = await fetch('/api/menu_items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newMenuItem, role: currentUser.role }), // Include role
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      showToast('Menu item added successfully!', 'success');
+      setNewMenuItem({ name: '', description: '', price: 0.00, category_id: '', is_available: true });
+      setShowMenuItemForm(false);
+      fetchMenuItems();
+    } catch (error) {
+      console.error('Failed to add menu item:', error);
+      showToast(`Failed to add menu item: ${error.message}`, 'error');
     }
   };
 
@@ -723,7 +834,7 @@ function App() {
     }
   };
 
-  // NEW: Update Garden Booking
+  // Update Garden Booking
   const updateGardenBooking = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
@@ -751,6 +862,36 @@ function App() {
     } catch (error) {
       console.error('Failed to update garden booking:', error);
       showToast(`Failed to update garden booking: ${error.message}`, 'error');
+    }
+  };
+
+  // NEW: Update Menu Item
+  const updateMenuItem = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to update menu items.', 'error');
+      return;
+    }
+    if (!editingMenuItem) return;
+    try {
+      const response = await fetch(`/api/menu_items?id=${editingMenuItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editingMenuItem, role: currentUser.role }), // Include role
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      showToast('Menu item updated successfully!', 'success');
+      setEditingMenuItem(null);
+      setShowMenuItemForm(false);
+      fetchMenuItems();
+    } catch (error) {
+      console.error('Failed to update menu item:', error);
+      showToast(`Failed to update menu item: ${error.message}`, 'error');
     }
   };
 
@@ -848,7 +989,7 @@ function App() {
     }
   };
 
-  // NEW: Delete Garden Booking
+  // Delete Garden Booking
   const deleteGardenBooking = async (id) => {
     if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
     // Frontend RBAC check
@@ -875,6 +1016,35 @@ function App() {
     } catch (error) {
       console.error('Failed to delete garden booking:', error);
       showToast(`Failed to delete garden booking: ${error.message}`, 'error');
+    }
+  };
+
+  // NEW: Delete Menu Item
+  const deleteMenuItem = async (id) => {
+    if (!isLoggedIn) { showToast('Please log in to perform this action.', 'error'); return; }
+    // Frontend RBAC check
+    if (!canPerformAction('admin')) {
+      showToast('You do not have permission to delete menu items.', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete this menu item?')) return;
+    try {
+      const response = await fetch(`/api/menu_items?id=${id}&role=${currentUser.role}`, { // Include role
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(data.message || 'Forbidden: You do not have permission.');
+        }
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      } else {
+        showToast('Menu item deleted successfully!', 'success');
+        fetchMenuItems();
+      }
+    } catch (error) {
+      console.error('Failed to delete menu item:', error);
+      showToast(`Failed to delete menu item: ${error.message}`, 'error');
     }
   };
 
@@ -1069,12 +1239,20 @@ function App() {
           Guesthouse Bookings
         </button>
         <button
-          onClick={() => setActiveTab('garden_bookings')} // NEW: Garden Bookings Tab
+          onClick={() => setActiveTab('garden_bookings')}
           className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
             activeTab === 'garden_bookings' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
           }`}
         >
           Garden Bookings
+        </button>
+        <button
+          onClick={() => setActiveTab('menu_items')} {/* NEW: Menu Items Tab */}
+          className={`px-6 py-3 rounded-lg shadow-md transition-all duration-200 ${
+            activeTab === 'menu_items' ? 'bg-blue-700 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'
+          }`}
+        >
+          Restaurant Menu
         </button>
         <button
           onClick={() => setActiveTab('rooms')}
@@ -1362,7 +1540,7 @@ function App() {
               </div>
             )}
 
-            {/* NEW: Garden Bookings Section */}
+            {/* Garden Bookings Section */}
             {activeTab === 'garden_bookings' && (
               <div>
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">Garden Bookings Management</h2>
@@ -1591,6 +1769,200 @@ function App() {
                   </div>
                 ) : (
                   <p className="text-gray-600">No garden bookings found. Add some new garden bookings!</p>
+                )}
+              </div>
+            )}
+
+            {/* NEW: Restaurant Menu Section */}
+            {activeTab === 'menu_items' && (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Restaurant Menu Management</h2>
+                <div className="flex flex-wrap gap-4 mb-4 items-center">
+                  <button
+                    onClick={() => {
+                      setShowMenuItemForm(true);
+                      setEditingMenuItem(null);
+                      setNewMenuItem({ name: '', description: '', price: 0.00, category_id: '', is_available: true });
+                    }}
+                    className={`bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-md shadow-md transition-colors ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!canPerformAction('admin')}
+                  >
+                    + Add New Menu Item
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="Search by Name/Description..."
+                    value={menuItemSearchTerm}
+                    onChange={handleMenuItemSearchChange}
+                    className="flex-grow max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <select
+                    value={menuItemFilterCategory}
+                    onChange={(e) => setMenuItemFilterCategory(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={menuItemFilterAvailability}
+                    onChange={(e) => setMenuItemFilterAvailability(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Availability</option>
+                    <option value="true">Available</option>
+                    <option value="false">Unavailable</option>
+                  </select>
+                </div>
+
+                {/* Add/Edit Menu Item Modal */}
+                <Modal
+                  isOpen={showMenuItemForm}
+                  onClose={() => { setShowMenuItemForm(false); setEditingMenuItem(null); }}
+                  title={editingMenuItem ? `Edit Menu Item ID: ${editingMenuItem.id}` : 'Add New Menu Item'}
+                >
+                  <form onSubmit={editingMenuItem ? updateMenuItem : addMenuItem} className="p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label htmlFor="menu_item_name" className="block text-sm font-medium text-gray-700">Name</label>
+                        <input
+                          type="text"
+                          id="menu_item_name"
+                          name="name"
+                          value={editingMenuItem ? editingMenuItem.name : newMenuItem.name}
+                          onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="menu_item_category" className="block text-sm font-medium text-gray-700">Category</label>
+                        <select
+                          id="menu_item_category"
+                          name="category_id"
+                          value={editingMenuItem ? editingMenuItem.category_id : newMenuItem.category_id}
+                          onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
+                          required
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        >
+                          <option value="">Select Category</option>
+                          {categories.map(category => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2"> {/* Description spans two columns */}
+                        <label htmlFor="menu_item_description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                        <textarea
+                          id="menu_item_description"
+                          name="description"
+                          value={editingMenuItem ? editingMenuItem.description : newMenuItem.description}
+                          onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
+                          rows="2"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label htmlFor="menu_item_price" className="block text-sm font-medium text-gray-700">Price</label>
+                        <input
+                          type="number"
+                          id="menu_item_price"
+                          name="price"
+                          value={editingMenuItem ? (editingMenuItem.price === null ? '' : editingMenuItem.price) : (newMenuItem.price === null ? '' : newMenuItem.price)}
+                          onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
+                          required
+                          step="0.01"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
+                        />
+                      </div>
+                      <div className="flex items-center mt-6">
+                        <input
+                          type="checkbox"
+                          id="menu_item_is_available"
+                          name="is_available"
+                          checked={editingMenuItem ? editingMenuItem.is_available : newMenuItem.is_available}
+                          onChange={editingMenuItem ? handleEditMenuItemChange : handleNewMenuItemChange}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="menu_item_is_available" className="ml-2 block text-sm text-gray-900">Is Available</label>
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => { setShowMenuItemForm(false); setEditingMenuItem(null); }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md shadow-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-sm transition-colors"
+                      >
+                        {editingMenuItem ? 'Update Menu Item' : 'Add Menu Item'}
+                      </button>
+                    </div>
+                  </form>
+                </Modal>
+
+                {menuItems.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Name</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Description</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Category</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Price</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Available</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {menuItems.map((item) => (
+                          <tr key={item.id} className="hover:bg-gray-50">
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.id}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.name}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.description || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{item.category_name || 'Uncategorized'}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">${item.price}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">
+                              {item.is_available ? (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                  Yes
+                                </span>
+                              ) : (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                  No
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 border-b text-sm">
+                              <button
+                                onClick={() => { setEditingMenuItem(item); setShowMenuItemForm(true); }}
+                                className={`text-blue-600 hover:text-blue-800 mr-2 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteMenuItem(item.id)}
+                                className={`text-red-600 hover:text-red-800 ${!canPerformAction('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!canPerformAction('admin')}
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-600">No menu items found. Add some new menu items!</p>
                 )}
               </div>
             )}
