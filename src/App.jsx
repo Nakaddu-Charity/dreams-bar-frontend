@@ -56,7 +56,12 @@ function App() {
   const [inventory, setInventory] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [categories, setCategories] = useState([]);
-  // REMOVED: const [clients, setClients] = useState([]); // Clients state no longer needed
+
+  // NEW: States for Report Data
+  const [totalRevenue, setTotalRevenue] = useState('0.00');
+  const [roomTypeBookings, setRoomTypeBookings] = useState([]);
+  const [roomStatusSummary, setRoomStatusSummary] = useState({ Available: 0, Occupied: 0, Maintenance: 0 });
+
 
   // States for Rooms search and filter
   const [roomSearchTerm, setRoomSearchTerm] = useState('');
@@ -87,7 +92,6 @@ function App() {
   // State for new item data (used by Add forms)
   const [newRoom, setNewRoom] = useState({ room_number: '', type: '', price_per_night: '', status: 'Available' });
   const [newInventory, setNewInventory] = useState({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
-  // UPDATED: NewBooking state now includes client_name and client_contact
   const [newBooking, setNewBooking] = useState({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
 
   // State for Toast Notifications
@@ -183,7 +187,11 @@ function App() {
     setInventory([]);
     setBookings([]);
     setCategories([]);
-    // Removed: setClients([]);
+    // NEW: Clear report states on logout
+    setTotalRevenue('0.00');
+    setRoomTypeBookings([]);
+    setRoomStatusSummary({ Available: 0, Occupied: 0, Maintenance: 0 });
+
     setActiveTab('dashboard'); // Reset tab
   };
 
@@ -280,7 +288,24 @@ function App() {
     }
   }, [showToast, isLoggedIn]);
 
-  // REMOVED: fetchClients function is no longer needed
+  // NEW: Fetch Reports Function
+  const fetchReports = useCallback(async () => {
+    if (!isLoggedIn || !currentUser) return; // Only fetch if logged in and user role is available
+    try {
+      const response = await fetch(`/api/reports/summary?role=${currentUser.role}`); // Pass role for RBAC
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+      setTotalRevenue(data.totalRevenue);
+      setRoomTypeBookings(data.roomTypeBookings);
+      setRoomStatusSummary(data.roomStatusSummary); // Update room status from reports API
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      showToast(`Failed to load reports: ${error.message}`, 'error');
+    }
+  }, [isLoggedIn, currentUser, showToast]);
+
 
   // Initial data load on component mount - SEQUENTIAL (only if logged in)
   const loadAllDataSequentially = useCallback(async () => {
@@ -292,9 +317,10 @@ function App() {
     await fetchBookings();
     // Then fetch supplementary data
     await fetchCategories();
-    // Removed: await fetchClients();
+    // NEW: Fetch reports
+    await fetchReports();
     setIsLoading(false); // End loading
-  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchCategories]); // Removed fetchClients from dependencies
+  }, [isLoggedIn, fetchRooms, fetchInventory, fetchBookings, fetchCategories, fetchReports]);
 
   // Effect to trigger initial data load if isLoggedIn changes to true
   useEffect(() => {
@@ -391,13 +417,11 @@ function App() {
     setEditingInventory(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
-  // UPDATED: handleNewBookingChange to include client_name and client_contact
   const handleNewBookingChange = (e) => {
     const { name, value, type } = e.target;
     setNewBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
   };
 
-  // UPDATED: handleEditBookingChange to include client_name and client_contact
   const handleEditBookingChange = (e) => {
     const { name, value, type } = e.target;
     setEditingBooking(prev => ({ ...prev, [name]: type === 'number' ? parseNumericInput(value) : value }));
@@ -428,6 +452,7 @@ function App() {
       setNewRoom({ room_number: '', type: '', price_per_night: '', status: 'Available' });
       setShowRoomForm(false);
       fetchRooms();
+      fetchReports(); // Refresh reports after adding a room (might affect room counts)
     } catch (error) {
       console.error('Failed to add room:', error);
       showToast(`Failed to add room: ${error.message}`, 'error');
@@ -457,6 +482,7 @@ function App() {
       setNewInventory({ name: '', category_id: '', quantity: '', unit: '', cost_price: '', selling_price: '', reorder_level: '' });
       setShowInventoryForm(false);
       fetchInventory();
+      fetchReports(); // Refresh reports after adding inventory (might affect low stock)
     } catch (error) {
       console.error('Failed to add inventory item:', error);
       showToast(`Failed to add inventory item: ${error.message}`, 'error');
@@ -472,7 +498,7 @@ function App() {
       return;
     }
     try {
-      // UPDATED: Send client_name and client_contact instead of client_id
+      // Send client_name and client_contact instead of client_id
       const response = await fetch('/api/bookings/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -483,10 +509,11 @@ function App() {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
       showToast('Booking added successfully!', 'success');
-      // UPDATED: Reset newBooking state to include new client fields
+      // Reset newBooking state to include new client fields
       setNewBooking({ room_id: '', client_name: '', client_contact: '', check_in_date: '', check_out_date: '', total_price: '', status: 'Confirmed' });
       setShowBookingForm(false);
       fetchBookings();
+      fetchReports(); // Refresh reports after adding a booking (affects revenue, room type bookings)
     } catch (error) {
       console.error('Failed to add booking:', error);
       showToast(`Failed to add booking: ${error.message}`, 'error');
@@ -519,6 +546,7 @@ function App() {
       setEditingRoom(null);
       setShowRoomForm(false);
       fetchRooms();
+      fetchReports(); // Refresh reports after updating a room (might affect room counts)
     } catch (error) {
       console.error('Failed to update room:', error);
       showToast(`Failed to update room: ${error.message}`, 'error');
@@ -549,6 +577,7 @@ function App() {
       setEditingInventory(null);
       setShowInventoryForm(false);
       fetchInventory();
+      fetchReports(); // Refresh reports after updating inventory (might affect low stock)
     } catch (error) {
       console.error('Failed to update inventory item:', error);
       showToast(`Failed to update inventory item: ${error.message}`, 'error');
@@ -565,7 +594,7 @@ function App() {
     }
     if (!editingBooking) return;
     try {
-      // UPDATED: Send client_name and client_contact instead of client_id
+      // Send client_name and client_contact instead of client_id
       const response = await fetch(`/api/bookings/rooms?id=${editingBooking.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -579,6 +608,7 @@ function App() {
       setEditingBooking(null);
       setShowBookingForm(false);
       fetchBookings();
+      fetchReports(); // Refresh reports after updating a booking (affects revenue, room type bookings)
     } catch (error) {
       console.error('Failed to update booking:', error);
       showToast(`Failed to update booking: ${error.message}`, 'error');
@@ -611,6 +641,7 @@ function App() {
       } else {
         showToast('Room deleted successfully!', 'success');
         fetchRooms();
+        fetchReports(); // Refresh reports after deleting a room (might affect room counts)
       }
     } catch (error) {
       console.error('Failed to delete room:', error);
@@ -640,6 +671,7 @@ function App() {
       } else {
         showToast('Inventory item deleted successfully!', 'success');
         fetchInventory();
+        fetchReports(); // Refresh reports after deleting inventory (might affect low stock)
       }
     } catch (error) {
       console.error('Failed to delete inventory item:', error);
@@ -669,6 +701,7 @@ function App() {
       } else {
         showToast('Booking deleted successfully!', 'success');
         fetchBookings();
+        fetchReports(); // Refresh reports after deleting a booking (affects revenue, room type bookings)
       }
     } catch (error) {
       console.error('Failed to delete booking:', error);
@@ -677,11 +710,11 @@ function App() {
   };
 
 
-  // --- Dashboard Calculations (only if logged in) ---
-  const totalRooms = isLoggedIn ? rooms.length : 0;
-  const availableRooms = isLoggedIn ? rooms.filter(room => room.status === 'Available').length : 0;
-  const occupiedRooms = isLoggedIn ? rooms.filter(room => room.status === 'Occupied').length : 0;
-  const maintenanceRooms = isLoggedIn ? rooms.filter(room => room.status === 'Maintenance').length : 0;
+  // --- Dashboard Calculations (now using reports API for some) ---
+  // const totalRooms = isLoggedIn ? rooms.length : 0; // Now derived from roomStatusSummary
+  // const availableRooms = isLoggedIn ? rooms.filter(room => room.status === 'Available').length : 0;
+  // const occupiedRooms = isLoggedIn ? rooms.filter(room => room.status === 'Occupied').length : 0;
+  // const maintenanceRooms = isLoggedIn ? rooms.filter(room => room.status === 'Maintenance').length : 0;
 
   const totalBookings = isLoggedIn ? bookings.length : 0;
   const confirmedBookings = isLoggedIn ? bookings.filter(booking => booking.status === 'Confirmed').length : 0;
@@ -901,38 +934,51 @@ function App() {
                 <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Overview Dashboard</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Room Summary Card */}
+                  {/* Total Revenue Card */}
+                  <div className="bg-purple-50 p-6 rounded-lg shadow-md border-l-4 border-purple-600">
+                    <h3 className="text-xl font-semibold text-purple-800 mb-3">Total Revenue</h3>
+                    <p className="text-gray-700 text-4xl font-bold">${totalRevenue}</p>
+                    <p className="text-gray-500 text-sm mt-1">From all completed bookings</p>
+                  </div>
+
+                  {/* Room Status Card (now using roomStatusSummary from reports API) */}
                   <div className="bg-blue-50 p-6 rounded-lg shadow-md border-l-4 border-blue-600">
                     <h3 className="text-xl font-semibold text-blue-800 mb-3">Room Status</h3>
-                    <p className="text-gray-700 text-lg">Total Rooms: <span className="font-bold">{totalRooms}</span></p>
-                    <p className="text-green-600 text-lg">Available: <span className="font-bold">{availableRooms}</span></p>
-                    <p className="text-yellow-600 text-lg">Occupied: <span className="font-bold">{occupiedRooms}</span></p>
-                    <p className="text-red-600 text-lg">Maintenance: <span className="font-bold">{maintenanceRooms}</span></p>
+                    <p className="text-gray-700 text-lg">Total Rooms: <span className="font-bold">{roomStatusSummary.Available + roomStatusSummary.Occupied + roomStatusSummary.Maintenance}</span></p>
+                    <p className="text-green-600 text-lg">Available: <span className="font-bold">{roomStatusSummary.Available}</span></p>
+                    <p className="text-yellow-600 text-lg">Occupied: <span className="font-bold">{roomStatusSummary.Occupied}</span></p>
+                    <p className="text-red-600 text-lg">Maintenance: <span className="font-bold">{roomStatusSummary.Maintenance}</span></p>
                   </div>
 
-                  {/* Booking Summary Card */}
+                  {/* Room Type Popularity Card */}
                   <div className="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-600">
-                    <h3 className="text-xl font-semibold text-green-800 mb-3">Booking Overview</h3>
-                    <p className="text-gray-700 text-lg">Total Bookings: <span className="font-bold">{totalBookings}</span></p>
-                    <p className="text-blue-600 text-lg">Confirmed: <span className="font-bold">{confirmedBookings}</span></p>
-                    <p className="text-orange-600 text-lg">Pending: <span className="font-bold">{pendingBookings}</span></p>
-                    <p className="text-red-600 text-lg">Cancelled: <span className="font-bold">{cancelledBookings}</span></p>
+                    <h3 className="text-xl font-semibold text-green-800 mb-3">Room Type Popularity</h3>
+                    {roomTypeBookings.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-700 text-lg">
+                        {roomTypeBookings.map((type, index) => (
+                          <li key={index}>{type.room_type}: <span className="font-bold">{type.booking_count} bookings</span></li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-600 text-sm">No room type booking data yet.</p>
+                    )}
                   </div>
 
-                  {/* Inventory Summary Card */}
-                  <div className="bg-purple-50 p-6 rounded-lg shadow-md border-l-4 border-purple-600">
-                    <h3 className="text-xl font-semibold text-purple-800 mb-3">Inventory Status</h3>
+                  {/* Inventory Low Stock Card (remains the same) */}
+                  <div className="bg-orange-50 p-6 rounded-lg shadow-md border-l-4 border-orange-600">
+                    <h3 className="text-xl font-semibold text-orange-800 mb-3">Inventory Low Stock</h3>
                     <p className="text-gray-700 text-lg">Total Inventory Items: <span className="font-bold">{totalInventoryItems}</span></p>
                     <p className="text-red-600 text-lg">Low Stock Items: <span className="font-bold">{lowStockItems.length}</span></p>
-                    {lowStockItems.length > 0 && (
+                    {lowStockItems.length > 0 ? (
                       <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
                         {lowStockItems.slice(0, 5).map(item => ( // Show first 5 low stock items
                           <li key={item.id}>{item.name} ({item.quantity} {item.unit})</li>
                         ))}
                         {lowStockItems.length > 5 && <li>...and {lowStockItems.length - 5} more</li>}
                       </ul>
+                    ) : (
+                      <p className="text-green-600 text-sm">All inventory levels are good!</p>
                     )}
-                    {lowStockItems.length === 0 && <p className="text-green-600 text-sm">All inventory levels are good!</p>}
                   </div>
                 </div>
               </div>
@@ -994,7 +1040,7 @@ function App() {
                           ))}
                         </select>
                       </div>
-                      {/* NEW: Client Name Input */}
+                      {/* Client Name Input */}
                       <div>
                         <label htmlFor="client_name" className="block text-sm font-medium text-gray-700">Client Name</label>
                         <input
@@ -1007,7 +1053,7 @@ function App() {
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
                         />
                       </div>
-                      {/* NEW: Client Contact Input */}
+                      {/* Client Contact Input */}
                       <div>
                         <label htmlFor="client_contact" className="block text-sm font-medium text-gray-700">Client Contact (Optional)</label>
                         <input
@@ -1097,8 +1143,8 @@ function App() {
                         <tr>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">ID</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Room</th>
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th> {/* UPDATED */}
-                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Contact</th> {/* NEW */}
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Name</th>
+                          <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Client Contact</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-in</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Check-out</th>
                           <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-600">Total Price</th>
@@ -1111,8 +1157,8 @@ function App() {
                           <tr key={booking.id} className="hover:bg-gray-50">
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.id}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.room_number} ({booking.room_type})</td>
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name}</td> {/* UPDATED */}
-                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td> {/* NEW */}
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_name || 'N/A'}</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-700">{booking.client_contact || 'N/A'}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_in_date).toLocaleDateString()}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">{new Date(booking.check_out_date).toLocaleDateString()}</td>
                             <td className="py-3 px-4 border-b text-sm text-gray-700">${booking.total_price}</td>
